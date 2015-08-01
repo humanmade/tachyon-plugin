@@ -6,7 +6,9 @@
  * Author: Joe Hoyle | HUman Made
  */
 
-define( 'PHOTON_URL', 'http://photon.eu-central-1.aws.hmn.md' );
+if ( ! defined( 'PHOTON_URL' ) || ! PHOTON_URL ) {
+	return;
+}
 
 require_once( dirname( __FILE__ ) . '/inc/class-photon.php' );
 
