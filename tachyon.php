@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Plugin Name: Techyon
+ * Plugin Name: Tachyon
  * Version: 0.9
- * Description: A standalone techyon proof of concept
+ * Description: A standalone tachyon proof of concept
  * Author: Joe Hoyle | Human Made | Automattic Inc
  */
 
@@ -12,24 +12,24 @@
  * Copyright: Human Made Limited
  */
 
-if ( ! defined( 'TECHYON_URL' ) || ! TECHYON_URL ) {
+if ( ! defined( 'TACHYON_URL' ) || ! TACHYON_URL ) {
 	return;
 }
 
-require_once( dirname( __FILE__ ) . '/inc/class-techyon.php' );
+require_once( dirname( __FILE__ ) . '/inc/class-tachyon.php' );
 
-Techyon::instance();
+Tachyon::instance();
 
 /**
- * Generates a Techyon URL.
+ * Generates a Tachyon URL.
  *
- * @see http://developer.wordpress.com/docs/techyon/
+ * @see http://developer.wordpress.com/docs/tachyon/
  *
  * @param string $image_url URL to the publicly accessible image you want to manipulate
  * @param array|string $args An array of arguments, i.e. array( 'w' => '300', 'resize' => array( 123, 456 ) ), or in string form (w=123&h=456)
  * @return string The raw final URL. You should run this through esc_url() before displaying it.
  */
-function techyon_url( $image_url, $args = array(), $scheme = null ) {
+function tachyon_url( $image_url, $args = array(), $scheme = null ) {
 
 	$upload_dir = wp_upload_dir();
 	$upload_baseurl = $upload_dir['baseurl'];
@@ -44,25 +44,25 @@ function techyon_url( $image_url, $args = array(), $scheme = null ) {
 		return $image_url;
 	}
 
-	if ( false !== apply_filters( 'jetpack_techyon_skip_for_url', false, $image_url, $args, $scheme ) ) {
+	if ( false !== apply_filters( 'jetpack_tachyon_skip_for_url', false, $image_url, $args, $scheme ) ) {
 		return $image_url;
 	}
 
-	$image_url = apply_filters( 'jetpack_techyon_pre_image_url', $image_url, $args,      $scheme );
-	$args      = apply_filters( 'jetpack_techyon_pre_args',      $args,      $image_url, $scheme );
+	$image_url = apply_filters( 'jetpack_tachyon_pre_image_url', $image_url, $args,      $scheme );
+	$args      = apply_filters( 'jetpack_tachyon_pre_args',      $args,      $image_url, $scheme );
 
-	$techyon_url = str_replace( $upload_baseurl, TECHYON_URL, $image_url );
+	$tachyon_url = str_replace( $upload_baseurl, TACHYON_URL, $image_url );
 
 	if ( $args ) {
 		if ( is_array( $args ) ) {
-			$techyon_url = add_query_arg( $args, $techyon_url );
+			$tachyon_url = add_query_arg( $args, $tachyon_url );
 		} else {
 			// You can pass a query string for complicated requests but where you still want CDN subdomain help, etc.
-			$techyon_url .= '?' . $args;
+			$tachyon_url .= '?' . $args;
 		}
 	}
 
 
-	return $techyon_url;
+	return $tachyon_url;
 }
-add_filter( 'jetpack_techyon_url', 'techyon_url', 10, 3 );
+add_filter( 'jetpack_tachyon_url', 'tachyon_url', 10, 3 );
