@@ -464,10 +464,14 @@ class Photon {
 		if ( ! $parsed_url )
 			return false;
 
-		static $upload_dir;
 		$upload_dir = wp_upload_dir();
+		$upload_baseurl = $upload_dir['baseurl'];
 
-		if ( strpos( $url, $upload_dir['baseurl'] ) !== 0 ) {
+		if ( is_multisite() ) {
+			$upload_baseurl = preg_replace( '#/sites/[\d]+#', '', $upload_baseurl );
+		}
+
+		if ( strpos( $url, $upload_baseurl ) !== 0 ) {
 			return false;
 		}
 

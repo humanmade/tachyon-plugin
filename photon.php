@@ -25,8 +25,12 @@ Photon::instance();
  */
 function photon_url( $image_url, $args = array(), $scheme = null ) {
 
-	static $upload_dir;
 	$upload_dir = wp_upload_dir();
+	$upload_baseurl = $upload_dir['baseurl'];
+
+	if ( is_multisite() ) {
+		$upload_baseurl = preg_replace( '#/sites/[\d]+#', '', $upload_baseurl );
+	}
 
 	$image_url = trim( $image_url );
 
@@ -41,7 +45,7 @@ function photon_url( $image_url, $args = array(), $scheme = null ) {
 	$image_url = apply_filters( 'jetpack_photon_pre_image_url', $image_url, $args,      $scheme );
 	$args      = apply_filters( 'jetpack_photon_pre_args',      $args,      $image_url, $scheme );
 
-	$photon_url = str_replace( $upload_dir['baseurl'], PHOTON_URL, $image_url );
+	$photon_url = str_replace( $upload_baseurl, PHOTON_URL, $image_url );
 
 	if ( $args ) {
 		if ( is_array( $args ) ) {
@@ -51,6 +55,7 @@ function photon_url( $image_url, $args = array(), $scheme = null ) {
 			$photon_url .= '?' . $args;
 		}
 	}
+
 
 	return $photon_url;
 }
