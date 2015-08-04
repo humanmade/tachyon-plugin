@@ -3,7 +3,12 @@
 /**
  * Plugin Name: Techyon x1
  * Description: A standalone techyon proof of concept
- * Author: Joe Hoyle | HUman Made
+ * Author: Joe Hoyle | Human Made | Automattic Inc
+ */
+
+/**
+ * Copyright: Automattic Inc
+ * Copyright: Human Made Limited
  */
 
 if ( ! defined( 'TECHYON_URL' ) || ! TECHYON_URL ) {
