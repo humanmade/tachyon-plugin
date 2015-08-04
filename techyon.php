@@ -1,7 +1,8 @@
 <?php
 
 /**
- * Plugin Name: Techyon x1
+ * Plugin Name: Techyon
+ * Version: 0.9
  * Description: A standalone techyon proof of concept
  * Author: Joe Hoyle | Human Made | Automattic Inc
  */
