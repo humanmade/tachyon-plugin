@@ -1,13 +1,13 @@
 <?php
 
-class Photon {
+class Techyon {
 	/**
 	 * Class variables
 	 */
 	// Oh look, a singleton
 	private static $__instance = null;
 
-	// Allowed extensions must match http://code.trac.wordpress.org/browser/photon/index.php#L31
+	// Allowed extensions must match http://code.trac.wordpress.org/browser/techyon/index.php#L31
 	protected static $extensions = array(
 		'gif',
 		'jpg',
@@ -39,17 +39,17 @@ class Photon {
 	private function __construct() {}
 
 	/**
-	 * Register actions and filters, but only if basic Photon functions are available.
-	 * The basic functions are found in ./functions.photon.php.
+	 * Register actions and filters, but only if basic Techyon functions are available.
+	 * The basic functions are found in ./functions.techyon.php.
 	 *
 	 * @uses add_action, add_filter
 	 * @return null
 	 */
 	private function setup() {
 		// Display warning if site is private
-		add_action( 'jetpack_activate_module_photon', array( $this, 'action_jetpack_activate_module_photon' ) );
+		add_action( 'jetpack_activate_module_techyon', array( $this, 'action_jetpack_activate_module_techyon' ) );
 
-		if ( ! function_exists( 'photon_url' ) )
+		if ( ! function_exists( 'techyon_url' ) )
 			return;
 
 		// Images in post content and galleries
@@ -64,10 +64,10 @@ class Photon {
 	 * Check if site is private and warn user if it is
 	 *
 	 * @uses Jetpack::check_privacy
-	 * @action jetpack_activate_module_photon
+	 * @action jetpack_activate_module_techyon
 	 * @return null
 	 */
-	public function action_jetpack_activate_module_photon() {
+	public function action_jetpack_activate_module_techyon() {
 		Jetpack::check_privacy( __FILE__ );
 	}
 
@@ -120,10 +120,10 @@ class Photon {
 	}
 
 	/**
-	 * Identify images in post content, and if images are local (uploaded to the current site), pass through Photon.
+	 * Identify images in post content, and if images are local (uploaded to the current site), pass through Techyon.
 	 *
 	 * @param string $content
-	 * @uses self::validate_image_url, apply_filters, jetpack_photon_url, esc_url
+	 * @uses self::validate_image_url, apply_filters, jetpack_techyon_url, esc_url
 	 * @filter the_content
 	 * @return string
 	 */
@@ -150,7 +150,7 @@ class Photon {
 				$src = $src_orig = $images['img_url'][ $index ];
 
 				// Allow specific images to be skipped
-				if ( apply_filters( 'jetpack_photon_skip_image', false, $src, $tag ) )
+				if ( apply_filters( 'jetpack_techyon_skip_image', false, $src, $tag ) )
 					continue;
 
 				// Support Automattic's Lazy Load plugin
@@ -163,7 +163,7 @@ class Photon {
 					$src = $src_orig = $lazy_load_src[1];
 				}
 
-				// Check if image URL should be used with Photon
+				// Check if image URL should be used with Techyon
 				if ( self::validate_image_url( $src ) ) {
 					// Find the width and height attributes
 					$width = $height = false;
@@ -193,7 +193,7 @@ class Photon {
 					}
 
 					// WP Attachment ID, if uploaded to this site
-					if ( preg_match( '#class=["|\']?[^"\']*wp-image-([\d]+)[^"\']*["|\']?#i', $images['img_tag'][ $index ], $attachment_id ) && ( 0 === strpos( $src, $upload_dir['baseurl'] ) || apply_filters( 'jetpack_photon_image_is_local', false, compact( 'src', 'tag', 'images', 'index' ) ) ) ) {
+					if ( preg_match( '#class=["|\']?[^"\']*wp-image-([\d]+)[^"\']*["|\']?#i', $images['img_tag'][ $index ], $attachment_id ) && ( 0 === strpos( $src, $upload_dir['baseurl'] ) || apply_filters( 'jetpack_techyon_image_is_local', false, compact( 'src', 'tag', 'images', 'index' ) ) ) ) {
 						$attachment_id = intval( array_pop( $attachment_id ) );
 
 						if ( $attachment_id ) {
@@ -258,12 +258,12 @@ class Photon {
 					if ( ! $fullsize_url && preg_match_all( '#-e[a-z0-9]+(-\d+x\d+)?\.(' . implode('|', self::$extensions ) . '){1}$#i', basename( $src ), $filename ) )
 						$fullsize_url = true;
 
-					// Build URL, first maybe removing WP's resized string so we pass the original image to Photon
+					// Build URL, first maybe removing WP's resized string so we pass the original image to Techyon
 					if ( ! $fullsize_url ) {
 						$src = self::strip_image_dimensions_maybe( $src );
 					}
 
-					// Build array of Photon args and expose to filter before passing to Photon URL function
+					// Build array of Techyon args and expose to filter before passing to Techyon URL function
 					$args = array();
 
 					if ( false !== $width && false !== $height && false === strpos( $width, '%' ) && false === strpos( $height, '%' ) )
@@ -273,26 +273,26 @@ class Photon {
 					elseif ( false !== $height )
 						$args['h'] = $height;
 
-					$args = apply_filters( 'jetpack_photon_post_image_args', $args, compact( 'tag', 'src', 'src_orig', 'width', 'height' ) );
+					$args = apply_filters( 'jetpack_techyon_post_image_args', $args, compact( 'tag', 'src', 'src_orig', 'width', 'height' ) );
 
-					$photon_url = photon_url( $src, $args );
+					$techyon_url = techyon_url( $src, $args );
 
-					// Modify image tag if Photon function provides a URL
+					// Modify image tag if Techyon function provides a URL
 					// Ensure changes are only applied to the current image by copying and modifying the matched tag, then replacing the entire tag with our modified version.
-					if ( $src != $photon_url ) {
+					if ( $src != $techyon_url ) {
 						$new_tag = $tag;
 
-						// If present, replace the link href with a Photoned URL for the full-size image.
+						// If present, replace the link href with a Techyoned URL for the full-size image.
 						if ( ! empty( $images['link_url'][ $index ] ) && self::validate_image_url( $images['link_url'][ $index ] ) )
-							$new_tag = preg_replace( '#(href=["|\'])' . $images['link_url'][ $index ] . '(["|\'])#i', '\1' . photon_url( $images['link_url'][ $index ] ) . '\2', $new_tag, 1 );
+							$new_tag = preg_replace( '#(href=["|\'])' . $images['link_url'][ $index ] . '(["|\'])#i', '\1' . techyon_url( $images['link_url'][ $index ] ) . '\2', $new_tag, 1 );
 
-						// Supplant the original source value with our Photon URL
-						$photon_url = esc_url( $photon_url );
-						$new_tag = str_replace( $src_orig, $photon_url, $new_tag );
+						// Supplant the original source value with our Techyon URL
+						$techyon_url = esc_url( $techyon_url );
+						$new_tag = str_replace( $src_orig, $techyon_url, $new_tag );
 
-						// If Lazy Load is in use, pass placeholder image through Photon
+						// If Lazy Load is in use, pass placeholder image through Techyon
 						if ( isset( $placeholder_src ) && self::validate_image_url( $placeholder_src ) ) {
-							$placeholder_src = photon_url( $placeholder_src );
+							$placeholder_src = techyon_url( $placeholder_src );
 
 							if ( $placeholder_src != $placeholder_src_orig )
 								$new_tag = str_replace( $placeholder_src_orig, esc_url( $placeholder_src ), $new_tag );
@@ -310,7 +310,7 @@ class Photon {
 						$content = str_replace( $tag, $new_tag, $content );
 					}
 				} elseif ( preg_match( '#^http(s)?://i[\d]{1}.wp.com#', $src ) && ! empty( $images['link_url'][ $index ] ) && self::validate_image_url( $images['link_url'][ $index ] ) ) {
-					$new_tag = preg_replace( '#(href=["|\'])' . $images['link_url'][ $index ] . '(["|\'])#i', '\1' . photon_url( $images['link_url'][ $index ] ) . '\2', $tag, 1 );
+					$new_tag = preg_replace( '#(href=["|\'])' . $images['link_url'][ $index ] . '(["|\'])#i', '\1' . techyon_url( $images['link_url'][ $index ] ) . '\2', $tag, 1 );
 
 					$content = str_replace( $tag, $new_tag, $content );
 				}
@@ -341,41 +341,41 @@ class Photon {
 	 **/
 
 	/**
-	 * Filter post thumbnail image retrieval, passing images through Photon
+	 * Filter post thumbnail image retrieval, passing images through Techyon
 	 *
 	 * @param string|bool $image
 	 * @param int $attachment_id
 	 * @param string|array $size
-	 * @uses is_admin, apply_filters, wp_get_attachment_url, self::validate_image_url, this::image_sizes, jetpack_photon_url
+	 * @uses is_admin, apply_filters, wp_get_attachment_url, self::validate_image_url, this::image_sizes, jetpack_techyon_url
 	 * @filter image_downsize
 	 * @return string|bool
 	 */
 	public function filter_image_downsize( $image, $attachment_id, $size ) {
-		// Don't foul up the admin side of things, and provide plugins a way of preventing Photon from being applied to images.
-		if ( is_admin() || apply_filters( 'jetpack_photon_override_image_downsize', false, compact( 'image', 'attachment_id', 'size' ) ) )
+		// Don't foul up the admin side of things, and provide plugins a way of preventing Techyon from being applied to images.
+		if ( is_admin() || apply_filters( 'jetpack_techyon_override_image_downsize', false, compact( 'image', 'attachment_id', 'size' ) ) )
 			return $image;
 
-		// Get the image URL and proceed with Photon-ification if successful
+		// Get the image URL and proceed with Techyon-ification if successful
 		$image_url = wp_get_attachment_url( $attachment_id );
 
 		if ( $image_url ) {
-			// Check if image URL should be used with Photon
+			// Check if image URL should be used with Techyon
 			if ( ! self::validate_image_url( $image_url ) )
 				return $image;
 
-			// If an image is requested with a size known to WordPress, use that size's settings with Photon
+			// If an image is requested with a size known to WordPress, use that size's settings with Techyon
 			if ( ( is_string( $size ) || is_int( $size ) ) && array_key_exists( $size, self::image_sizes() ) ) {
 				$image_args = self::image_sizes();
 				$image_args = $image_args[ $size ];
 
-				$photon_args = array();
+				$techyon_args = array();
 
 				// `full` is a special case in WP
 				// To ensure filter receives consistent data regardless of requested size, `$image_args` is overridden with dimensions of original image.
 				if ( 'full' == $size ) {
 					$image_meta = wp_get_attachment_metadata( $attachment_id );
 					if ( isset( $image_meta['width'], $image_meta['height'] ) ) {
-						// 'crop' is true so Photon's `resize` method is used
+						// 'crop' is true so Techyon's `resize` method is used
 						$image_args = array(
 							'width'  => $image_meta['width'],
 							'height' => $image_meta['height'],
@@ -384,15 +384,15 @@ class Photon {
 					}
 				}
 
-				// Expose determined arguments to a filter before passing to Photon
+				// Expose determined arguments to a filter before passing to Techyon
 				$transform = $image_args['crop'] ? 'resize' : 'fit';
 
-				// Check specified image dimensions and account for possible zero values; photon fails to resize if a dimension is zero.
+				// Check specified image dimensions and account for possible zero values; techyon fails to resize if a dimension is zero.
 				if ( 0 == $image_args['width'] || 0 == $image_args['height'] ) {
 					if ( 0 == $image_args['width'] && 0 < $image_args['height'] ) {
-						$photon_args['h'] = $image_args['height'];
+						$techyon_args['h'] = $image_args['height'];
 					} elseif ( 0 == $image_args['height'] && 0 < $image_args['width'] ) {
-						$photon_args['w'] = $image_args['width'];
+						$techyon_args['w'] = $image_args['width'];
 					}
 				} else {
 					if ( ( 'resize' === $transform ) && $image_meta = wp_get_attachment_metadata( $attachment_id ) ) {
@@ -400,18 +400,18 @@ class Photon {
 						$smaller_width  = ( ( $image_meta['width']  < $image_args['width']  ) ? $image_meta['width']  : $image_args['width']  );
 						$smaller_height = ( ( $image_meta['height'] < $image_args['height'] ) ? $image_meta['height'] : $image_args['height'] );
 
-						$photon_args[ $transform ] = $smaller_width . ',' . $smaller_height;
+						$techyon_args[ $transform ] = $smaller_width . ',' . $smaller_height;
 					} else {
-						$photon_args[ $transform ] = $image_args['width'] . ',' . $image_args['height'];
+						$techyon_args[ $transform ] = $image_args['width'] . ',' . $image_args['height'];
 					}
 
 				}
 
-				$photon_args = apply_filters( 'jetpack_photon_image_downsize_string', $photon_args, compact( 'image_args', 'image_url', 'attachment_id', 'size', 'transform' ) );
+				$techyon_args = apply_filters( 'jetpack_techyon_image_downsize_string', $techyon_args, compact( 'image_args', 'image_url', 'attachment_id', 'size', 'transform' ) );
 
-				// Generate Photon URL
+				// Generate Techyon URL
 				$image = array(
-					photon_url( $image_url, $photon_args ),
+					techyon_url( $image_url, $techyon_args ),
 					false,
 					false
 				);
@@ -424,16 +424,16 @@ class Photon {
 				if ( ! $width || ! $height )
 					return $image;
 
-				// Expose arguments to a filter before passing to Photon
-				$photon_args = array(
+				// Expose arguments to a filter before passing to Techyon
+				$techyon_args = array(
 					'fit' => $width . ',' . $height
 				);
 
-				$photon_args = apply_filters( 'jetpack_photon_image_downsize_array', $photon_args, compact( 'width', 'height', 'image_url', 'attachment_id' ) );
+				$techyon_args = apply_filters( 'jetpack_techyon_image_downsize_array', $techyon_args, compact( 'width', 'height', 'image_url', 'attachment_id' ) );
 
-				// Generate Photon URL
+				// Generate Techyon URL
 				$image = array(
-					photon_url( $image_url, $photon_args ),
+					techyon_url( $image_url, $techyon_args ),
 					false,
 					false
 				);
@@ -448,8 +448,8 @@ class Photon {
 	 **/
 
 	/**
-	 * Ensure image URL is valid for Photon.
-	 * Though Photon functions address some of the URL issues, we should avoid unnecessary processing if we know early on that the image isn't supported.
+	 * Ensure image URL is valid for Techyon.
+	 * Though Techyon functions address some of the URL issues, we should avoid unnecessary processing if we know early on that the image isn't supported.
 	 *
 	 * @param string $url
 	 * @uses wp_parse_args
@@ -472,11 +472,11 @@ class Photon {
 			return false;
 		}
 
-		return apply_filters( 'photon_validate_image_url', true, $url, $parsed_url );
+		return apply_filters( 'techyon_validate_image_url', true, $url, $parsed_url );
 	}
 
 	/**
-	 * Checks if the file exists before it passes the file to photon
+	 * Checks if the file exists before it passes the file to techyon
 	 *
 	 * @param string $src The image URL
 	 * @return string
@@ -484,7 +484,7 @@ class Photon {
 	protected static function strip_image_dimensions_maybe( $src ){
 		$stripped_src = $src;
 
-		// Build URL, first removing WP's resized string so we pass the original image to Photon
+		// Build URL, first removing WP's resized string so we pass the original image to Techyon
 		if ( preg_match( '#(-\d+x\d+)\.(' . implode('|', self::$extensions ) . '){1}$#i', $src, $src_parts ) ) {
 			$stripped_src = str_replace( $src_parts[1], '', $src );
 			$upload_dir = wp_upload_dir();
