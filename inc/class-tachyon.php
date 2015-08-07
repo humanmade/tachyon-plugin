@@ -458,8 +458,14 @@ class Tachyon {
 	protected static function validate_image_url( $url ) {
 		$parsed_url = @parse_url( $url );
 
-		if ( ! $parsed_url )
+		if ( ! $parsed_url ) {
 			return false;
+		}
+
+		// only replace urls with supported file extensions
+		if ( ! in_array( strtolower( pathinfo( $parsed_url['path'], PATHINFO_EXTENSION ) ), static::$extensions ) ) {
+			return false;
+		}
 
 		$upload_dir = wp_upload_dir();
 		$upload_baseurl = $upload_dir['baseurl'];
