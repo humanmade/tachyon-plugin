@@ -44,12 +44,12 @@ function tachyon_url( $image_url, $args = array(), $scheme = null ) {
 		return $image_url;
 	}
 
-	if ( false !== apply_filters( 'jetpack_tachyon_skip_for_url', false, $image_url, $args, $scheme ) ) {
+	if ( false !== apply_filters( 'tachyon_skip_for_url', false, $image_url, $args, $scheme ) ) {
 		return $image_url;
 	}
 
-	$image_url = apply_filters( 'jetpack_tachyon_pre_image_url', $image_url, $args,      $scheme );
-	$args      = apply_filters( 'jetpack_tachyon_pre_args',      $args,      $image_url, $scheme );
+	$image_url = apply_filters( 'tachyon_pre_image_url', $image_url, $args,      $scheme );
+	$args      = apply_filters( 'tachyon_pre_args',      $args,      $image_url, $scheme );
 
 	$tachyon_url = str_replace( $upload_baseurl, TACHYON_URL, $image_url );
 
@@ -65,4 +65,4 @@ function tachyon_url( $image_url, $args = array(), $scheme = null ) {
 
 	return $tachyon_url;
 }
-add_filter( 'jetpack_tachyon_url', 'tachyon_url', 10, 3 );
+add_filter( 'tachyon_url', 'tachyon_url', 10, 3 );
