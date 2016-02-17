@@ -23,8 +23,8 @@
 	</tr>
 </table>
 
-Tachyon is an image resizing processor built to be used with Amazon S3 as the image backend, and sit
-in front of a CDN such as CloudFlare.
+Tachyon is an image resizing processor built to be used with Amazon S3 as the image backend, and sits
+behind a CDN such as CloudFlare.
 
 It's forked from [Photon](https://developer.wordpress.com/docs/photon/) however uses Image Magick rather than Graphics Magic.
 
