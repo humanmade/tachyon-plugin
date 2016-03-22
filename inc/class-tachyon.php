@@ -438,8 +438,8 @@ class Tachyon {
 					}
 				}
 
-				$image_args['width']  = $image_meta['width'];
-				$image_args['height'] = $image_meta['height'];
+				$image_args['width']  = isset( $image_meta['width'] ) ? $image_meta['width'] : 0;
+				$image_args['height'] = isset( $image_meta['height'] ) ? $image_meta['height'] : 0;
 
 				list( $image_args['width'], $image_args['height'] ) = image_constrain_size_for_editor( $image_args['width'], $image_args['height'], $size, 'display' );
 
