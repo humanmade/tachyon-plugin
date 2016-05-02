@@ -310,7 +310,7 @@ class Tachyon {
 					 */
 					$args = apply_filters( 'tachyon_post_image_args', $args, compact( 'tag', 'src', 'src_orig', 'width', 'height' ) );
 
-					$tachyon_url = tachyon_url( $src, $args );
+					$tachyon_url = apply_filters( 'tachyon_url', $src, $args );
 
 					// Modify image tag if Tachyon function provides a URL
 					// Ensure changes are only applied to the current image by copying and modifying the matched tag, then replacing the entire tag with our modified version.
@@ -319,7 +319,7 @@ class Tachyon {
 
 						// If present, replace the link href with a Tachyoned URL for the full-size image.
 						if ( ! empty( $images['link_url'][ $index ] ) && self::validate_image_url( $images['link_url'][ $index ] ) )
-							$new_tag = preg_replace( '#(href=["|\'])' . $images['link_url'][ $index ] . '(["|\'])#i', '\1' . tachyon_url( $images['link_url'][ $index ] ) . '\2', $new_tag, 1 );
+							$new_tag = preg_replace( '#(href=["|\'])' . $images['link_url'][ $index ] . '(["|\'])#i', '\1' . apply_filters( 'tachyon_url', $images['link_url'][ $index ] ) . '\2', $new_tag, 1 );
 
 						// Supplant the original source value with our Tachyon URL
 						$tachyon_url = esc_url( $tachyon_url );
@@ -327,7 +327,7 @@ class Tachyon {
 
 						// If Lazy Load is in use, pass placeholder image through Tachyon
 						if ( isset( $placeholder_src ) && self::validate_image_url( $placeholder_src ) ) {
-							$placeholder_src = tachyon_url( $placeholder_src );
+							$placeholder_src = apply_filters( 'tachyon_url', $placeholder_src );
 
 							if ( $placeholder_src != $placeholder_src_orig )
 								$new_tag = str_replace( $placeholder_src_orig, esc_url( $placeholder_src ), $new_tag );
@@ -345,7 +345,7 @@ class Tachyon {
 						$content = str_replace( $tag, $new_tag, $content );
 					}
 				} elseif ( preg_match( '#^http(s)?://i[\d]{1}.wp.com#', $src ) && ! empty( $images['link_url'][ $index ] ) && self::validate_image_url( $images['link_url'][ $index ] ) ) {
-					$new_tag = preg_replace( '#(href=["|\'])' . $images['link_url'][ $index ] . '(["|\'])#i', '\1' . tachyon_url( $images['link_url'][ $index ] ) . '\2', $tag, 1 );
+					$new_tag = preg_replace( '#(href=["|\'])' . $images['link_url'][ $index ] . '(["|\'])#i', '\1' . apply_filters( 'tachyon_url', $images['link_url'][ $index ] ) . '\2', $tag, 1 );
 
 					$content = str_replace( $tag, $new_tag, $content );
 				}
@@ -489,7 +489,7 @@ class Tachyon {
 
 				// Generate Tachyon URL
 				$image = array(
-					tachyon_url( $image_url, $tachyon_args ),
+					apply_filters( 'tachyon_url', $image_url, $tachyon_args ),
 					$image_args['width'],
 					$image_args['height']
 				);
@@ -533,7 +533,7 @@ class Tachyon {
 
 				// Generate Tachyon URL
 				$image = array(
-					tachyon_url( $image_url, $tachyon_args ),
+					apply_filters( 'tachyon_url', $image_url, $tachyon_args ),
 					$width,
 					$height
 				);
@@ -579,7 +579,7 @@ class Tachyon {
 
 			}
 
-			$sources[ $i ]['url'] = tachyon_url( $url, $args );
+			$sources[ $i ]['url'] = apply_filters( 'tachyon_url', $url, $args );
 		}
 
 		return $sources;
