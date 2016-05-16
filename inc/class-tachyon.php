@@ -243,7 +243,6 @@ class Tachyon {
 									}
 								}
 							} else {
-								unset( $attachment_id );
 								unset( $attachment );
 							}
 						}
@@ -308,7 +307,7 @@ class Tachyon {
 					 * 	 @type $height Image height.
 					 * }
 					 */
-					$args = apply_filters( 'tachyon_post_image_args', $args, compact( 'tag', 'src', 'src_orig', 'width', 'height' ) );
+					$args = apply_filters( 'tachyon_post_image_args', $args, compact( 'tag', 'src', 'src_orig', 'width', 'height', 'attachment_id' ) );
 
 					$tachyon_url = tachyon_url( $src, $args );
 
