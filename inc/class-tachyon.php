@@ -58,7 +58,7 @@ class Tachyon {
 		add_filter( 'image_downsize', array( $this, 'filter_image_downsize' ), 10, 3 );
 
 		// Responsive image srcset substitution
-		add_filter( 'wp_calculate_image_srcset', array( $this, 'filter_srcset_array' ), 10, 4 );
+		add_filter( 'wp_calculate_image_srcset', array( $this, 'filter_srcset_array' ), 10, 5 );
 	}
 
 	/**
@@ -550,7 +550,7 @@ class Tachyon {
 	 * @uses self::validate_image_url, tachyon_url
 	 * @return array An array of Tachyon image urls and widths.
 	 */
-	public function filter_srcset_array( $sources, $size_array, $image_src, $image_meta ) {
+	public function filter_srcset_array( $sources, $size_array, $image_src, $image_meta, $attachment_id ) {
 		$upload_dir = wp_upload_dir();
 
 		foreach ( $sources as $i => $source ) {
@@ -577,6 +577,23 @@ class Tachyon {
 				}
 
 			}
+
+			/**
+			 * Filter the array of Tachyon arguments added to an image when it goes through Tachyon.
+			 * By default, contains only resize or width params
+			 *
+			 * @param array $args Array of Tachyon Arguments.
+			 * @param array $args {
+			 * 	 Array of image details.
+			 *
+			 * 	 @type $source Array containing URL and target dimensions.
+			 * 	 @type $image_meta Array containing attachment metadata.
+			 * 	 @type $width Image width.
+			 * 	 @type $height Image height.
+			 * 	 @type $attachment_id Image ID.
+			 * }
+			 */
+			$args = apply_filters( 'tachyon_srcset_image_args', $args, compact( 'source', 'image_meta', 'width', 'height', 'attachment_id' ) );
 
 			$sources[ $i ]['url'] = tachyon_url( $url, $args );
 		}
