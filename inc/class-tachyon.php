@@ -335,7 +335,9 @@ class Tachyon {
 						}
 
 						// Remove the width and height arguments from the tag to prevent distortion
-						$new_tag = preg_replace( '#(?<=\s)(width|height)=["|\']?[\d%]+["|\']?\s?#i', '', $new_tag );
+						if ( apply_filters( 'tachyon_remove_size_attributes', true ) ) {
+							$new_tag = preg_replace( '#(?<=\s)(width|height)=["|\']?[\d%]+["|\']?\s?#i', '', $new_tag );
+						}
 
 						// Tag an image for dimension checking
 						$new_tag = preg_replace( '#(\s?/)?>(\s*</a>)?$#i', ' data-recalc-dims="1"\1>\2', $new_tag );
