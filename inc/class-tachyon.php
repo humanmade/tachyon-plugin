@@ -61,23 +61,29 @@ class Tachyon {
 		add_filter( 'wp_calculate_image_srcset', array( $this, 'filter_srcset_array' ), 10, 5 );
 
         // Yoast Open Graph support
-        add_action( 'plugins_loaded', function() {
+        add_action('plugins_loaded', function() {
             if ( class_exists( 'WPSEO' ) || class_exists( 'WPSEO_Premium' ) ) {
-                add_filter( 'wpseo_opengraph_image', function( $img ) {
-
-                    if ( ! self::validate_image_url( $img ) ) {
-                        return $img;
-                    }
-
-                    return tachyon_url( $img );
-                } );
+                add_filter( 'wpseo_opengraph_image', array( $this, 'transform_image_url' ) );
             }
-        } );
+        });
 	}
 
 	/**
 	 ** IN-CONTENT IMAGE MANIPULATION FUNCTIONS
 	 **/
+
+    /**
+     * Check if the image is available and return tachyon url
+     * @param image url
+     * @return image url
+     */
+    public static function transform_image_url( $img ) {
+        if ( ! self::validate_image_url( $img ) ) {
+            return $img;
+        }
+
+        return tachyon_url( $img );
+    } 
 
 	/**
 	 * Match all images and any relevant <a> tags in a block of HTML.
@@ -616,6 +622,19 @@ class Tachyon {
 
 		return $sources;
 	}
+
+    /**
+     * Check if the image is available and return tachyon url
+     * @param image url
+     * @return image url
+     */
+    public function transform_image_url( $img ) {
+        if ( ! self::validate_image_url( $img ) ) {
+            return $img;
+        }
+
+        return tachyon_url( $img );
+    }
 
 	/**
 	 ** GENERAL FUNCTIONS
