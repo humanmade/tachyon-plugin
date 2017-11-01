@@ -68,6 +68,10 @@ class Tachyon {
         });
 	}
 
+    /**
+     ** IN-CONTENT IMAGE MANIPULATION FUNCTIONS
+     **/
+
 	/**
 	 * Match all images and any relevant <a> tags in a block of HTML.
 	 *
