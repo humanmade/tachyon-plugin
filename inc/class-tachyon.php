@@ -61,14 +61,18 @@ class Tachyon {
 		add_filter( 'wp_calculate_image_srcset', array( $this, 'filter_srcset_array' ), 10, 5 );
 
         // Yoast Open Graph support
-        add_filter( 'wpseo_opengraph_image', function( $img ) {
+        add_action( 'plugins_loaded', function() {
+            if ( class_exists( 'WPSEO' ) || class_exists( 'WPSEO_Premium' ) ) {
+                add_filter( 'wpseo_opengraph_image', function( $img ) {
 
-            if ( ! self::validate_image_url( $img ) ) {
-                return $img;
+                    if ( ! self::validate_image_url( $img ) ) {
+                        return $img;
+                    }
+
+                    return tachyon_url( $img );
+                } );
             }
-
-            return tachyon_url( $img );
-        });
+        } );
 	}
 
 	/**
