@@ -69,23 +69,6 @@ class Tachyon {
 	}
 
 	/**
-	 ** IN-CONTENT IMAGE MANIPULATION FUNCTIONS
-	 **/
-
-    /**
-     * Check if the image is available and return tachyon url
-     * @param image url
-     * @return image url
-     */
-    public static function transform_image_url( $img ) {
-        if ( ! self::validate_image_url( $img ) ) {
-            return $img;
-        }
-
-        return tachyon_url( $img );
-    } 
-
-	/**
 	 * Match all images and any relevant <a> tags in a block of HTML.
 	 *
 	 * @param string $content Some HTML.
