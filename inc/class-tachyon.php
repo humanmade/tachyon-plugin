@@ -7,7 +7,7 @@ class Tachyon {
 	// Oh look, a singleton
 	private static $__instance = null;
 
-	// Allowed extensions must match http://code.trac.wordpress.org/browser/tachyon/index.php#L31
+	// Allowed extensions must match https://code.trac.wordpress.org/browser/photon/index.php#L33
 	protected static $extensions = array(
 		'gif',
 		'jpg',
