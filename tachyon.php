@@ -2,7 +2,7 @@
 
 /**
  * Plugin Name: Tachyon
- * Version: 0.9
+ * Version: 0.9.1
  * Description: A standalone tachyon proof of concept
  * Author: Joe Hoyle | Human Made | Automattic Inc
  */
@@ -43,7 +43,7 @@ function tachyon_url( $image_url, $args = array(), $scheme = null ) {
 	$image_file = basename( parse_url( $image_url, PHP_URL_PATH ) );
 	$image_url  = str_replace( $image_file, urlencode( $image_file ), $image_url );
 
-	if ( strpos( $image_url, $upload_dir['baseurl'] ) !== 0 ) {
+	if ( strpos( $image_url, $upload_baseurl ) !== 0 ) {
 		return $image_url;
 	}
 
