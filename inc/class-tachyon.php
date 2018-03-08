@@ -389,7 +389,24 @@ class Tachyon {
 	public function filter_image_downsize( $image, $attachment_id, $size ) {
 		// Don't foul up the admin side of things, and provide plugins a way of preventing Tachyon from being applied to images.
 		if (
-			is_admin() ||
+			(
+				is_admin() &&
+				/**
+				 * Provide plugins a way of enable use of Tachyon in the admin context.
+				 *
+				 * @since 0.9.1
+				 *
+				 * @param bool true Disable the use of Tachyon in the admin.
+				 * @param array $args {
+				 * 	 Array of image details.
+				 *
+				 * 	 @type $image Image URL.
+				 * 	 @type $attachment_id Attachment ID of the image.
+				 * 	 @type $size Image size. Can be a string (name of the image size, e.g. full) or an integer.
+				 * }
+				 */
+				apply_filters( 'tachyon_disable_in_admin', true, compact( 'image', 'attachment_id', 'size' ) )
+			) ||
 			/**
 			 * Provide plugins a way of preventing Tachyon from being applied to images retrieved from WordPress Core.
 			 *
@@ -405,8 +422,9 @@ class Tachyon {
 			 * }
 			 */
 			apply_filters( 'tachyon_override_image_downsize', false, compact( 'image', 'attachment_id', 'size' ) )
-		)
+		) {
 			return $image;
+		}
 
 		// Get the image URL and proceed with Tachyon-ification if successful
 		$image_url = wp_get_attachment_url( $attachment_id );
