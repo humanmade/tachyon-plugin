@@ -284,12 +284,27 @@ class Tachyon {
 					// Build array of Tachyon args and expose to filter before passing to Tachyon URL function
 					$args = array();
 
-					if ( false !== $width && false !== $height && false === strpos( $width, '%' ) && false === strpos( $height, '%' ) )
+					if ( false !== $width && false !== $height && false === strpos( $width, '%' ) && false === strpos( $height, '%' ) ) {
 						$args[ $transform ] = $width . ',' . $height;
-					elseif ( false !== $width )
+						// Set the gravity from the registered image size.
+
+						if ( 'resize' === $transform && isset( $size ) && array_key_exists( $size, $image_sizes ) && is_array( $image_sizes[ $size ]['crop'] ) ) {
+							$args['gravity'] = implode( '', array_map( function ( $v ) {
+								$map = [
+									'top' => 'north',
+									'center' => '',
+									'bottom' => 'south',
+									'left' => 'west',
+									'right' => 'east',
+								];
+								return $map[ $v ];
+							}, $image_sizes[ $size ]['crop'] ) );
+						}
+					} elseif ( false !== $width ) {
 						$args['w'] = $width;
-					elseif ( false !== $height )
+					} elseif ( false !== $height ) {
 						$args['h'] = $height;
+					}
 
 					/**
 					 * Filter the array of Tachyon arguments added to an image when it goes through Tachyon.
@@ -467,8 +482,19 @@ class Tachyon {
 						$tachyon_args[ $transform ] = $image_args['width'] . ',' . $image_args['height'];
 					}
 
+					if ( 'resize' === $transform && is_array( $image_args['crop'] ) ) {
+						$tachyon_args['gravity'] = implode( '', array_map( function ( $v ) {
+							$map = [
+								'top' => 'north',
+								'center' => '',
+								'bottom' => 'south',
+								'left' => 'west',
+								'right' => 'east',
+							];
+							return $map[ $v ];
+						}, $image_args['crop'] ) );
+					}
 				}
-
 
 				/**
 				 * Filter the Tachyon Arguments added to an image when going through Tachyon, when that image size is a string.
