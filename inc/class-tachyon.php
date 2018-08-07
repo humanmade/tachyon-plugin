@@ -398,7 +398,7 @@ class Tachyon {
 		 *
 		 * 	 @type $image Image URL.
 		 * 	 @type $attachment_id Attachment ID of the image.
-		 * 	 @type $size Image size. Can be a string (name of the image size, e.g. full) or an integer.
+		 * 	 @type $size Image size. Can be a string (name of the image size, e.g. full), integer or an array e.g. [ width, height ].
 		 * }
 		 */
 		$disable_in_admin = is_admin() && apply_filters( 'tachyon_disable_in_admin', true, compact( 'image', 'attachment_id', 'size' ) );
@@ -414,7 +414,7 @@ class Tachyon {
 		 *
 		 * 	 @type $image Image URL.
 		 * 	 @type $attachment_id Attachment ID of the image.
-		 * 	 @type $size Image size. Can be a string (name of the image size, e.g. full) or an integer.
+		 * 	 @type $size Image size. Can be a string (name of the image size, e.g. full), integer or an array e.g. [ width, height ].
 		 * }
 		 */
 		$override_image_downsize = apply_filters( 'tachyon_override_image_downsize', false, compact( 'image', 'attachment_id', 'size' ) );
