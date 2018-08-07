@@ -34,9 +34,11 @@ This plugin handles modifying WordPress image URLs to use a Tachyon service inst
 
 ## Usage
 
-Typically the above steps are all you need to do however you can use the following public facing function and filters.
+Typically the above steps are all you need to do however you can use the following public facing functions and filters.
 
-### `tachyon_url( string $image_url, array $args = [] )`
+### Functions
+
+#### `tachyon_url( string $image_url, array $args = [] )`
 
 This function returns the Tachyon URL for a given image hosted on Amazon S3.
 
