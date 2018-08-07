@@ -5,11 +5,11 @@
 			Faster than light image processing. Inspired / forked from Photon.
 		</td>
 		<td align="right" width="20%">
-			<a href="https://travis-ci.org/humanmade/tachyon">
+			<a href="https://travis-ci.org/humanmade/tachyon-plugin">
 				<img src="https://travis-ci.org/humanmade/tachyon.svg?branch=master" alt="Build status">
 			</a>
-			<a href="http://codecov.io/github/humanmade/tachyon?branch=master">
-				<img src="http://codecov.io/github/humanmade/tachyon/coverage.svg?branch=master" alt="Coverage via codecov.io" />
+			<a href="http://codecov.io/github/humanmade/tachyon-plugin?branch=master">
+				<img src="http://codecov.io/github/humanmade/tachyon-plugin/coverage.svg?branch=master" alt="Coverage via codecov.io" />
 			</a>
 		</td>
 	</tr>
@@ -23,10 +23,14 @@
 	</tr>
 </table>
 
-Tachyon is an image resizing processor built to be used with Amazon S3 as the image backend, and sits
-behind a CDN such as CloudFlare.
+[Tachyon](https://github.com/humanmade/tachyon) is an image resizing service built to be used with Amazon S3 as the image backend, AWS Lambda (or any node.js server) to process images using [sharp](http://sharp.pixelplumbing.com/en/stable/), and sits behind a CDN such as CloudFront or CloudFlare.
 
-It's forked from [Photon](https://developer.wordpress.com/docs/photon/) however uses Image Magick rather than Graphics Magic.
+This plugin handles modifying WordPress image URLs to use a Tachyon service instance.
+
+## Usage
+
+1. Upload and enable this plugin.
+2. Add `define( 'TACHYON_URL', 'https://your.tachyon.url/path/to/uploads' )` to your `wp-config.php` file.
 
 ## Credits
 Created by Human Made for high volume and large-scale sites, such as [Happytables](http://happytables.com/). We run Tachyon on sites with millions of monthly page views, and thousands of sites.
