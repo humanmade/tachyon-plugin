@@ -65,7 +65,12 @@ function tachyon_url( $image_url, $args = array(), $scheme = null ) {
 		}
 	}
 
-
-	return $tachyon_url;
+	/**
+	 * Allows a final modification of the generated tachyon URL.
+	 *
+	 * @param string $tachyon_url The final tachyon image URL including query args.
+	 * @param string $image_url   The image URL without query args.
+	 * @param array  $args        A key value array of the query args appended to $image_url.
+	 */
+	return apply_filters( 'tachyon_url', $tachyon_url, $image_url, $args );
 }
-add_filter( 'tachyon_url', 'tachyon_url', 10, 3 );
