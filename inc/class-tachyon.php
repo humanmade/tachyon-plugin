@@ -390,7 +390,7 @@ class Tachyon {
 		/**
 		 * Provide plugins a way of enable use of Tachyon in the admin context.
 		 *
-		 * @since 0.9.1
+		 * @since 0.9.2
 		 *
 		 * @param bool true Disable the use of Tachyon in the admin.
 		 * @param array $args {
@@ -406,7 +406,7 @@ class Tachyon {
 		/**
 		 * Provide plugins a way of preventing Tachyon from being applied to images retrieved from WordPress Core.
 		 *
-		 * @since 2.0.0
+		 * @since 0.9.2
 		 *
 		 * @param bool false Stop Tachyon from being applied to the image. Default to false.
 		 * @param array $args {
