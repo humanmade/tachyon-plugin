@@ -440,6 +440,7 @@ class Tachyon {
 
 		// Get the image URL and proceed with Tachyon-ification if successful
 		$image_url = wp_get_attachment_url( $attachment_id );
+		$is_intermediate = false;
 
 		if ( $image_url ) {
 			// Check if image URL should be used with Tachyon
@@ -467,8 +468,11 @@ class Tachyon {
 						if ( $image_resized ) { // This could be false when the requested image size is larger than the full-size image.
 							$image_meta['width']  = $image_resized[6];
 							$image_meta['height'] = $image_resized[7];
+							$is_intermediate = true;
 						}
 					}
+				} else {
+					$is_intermediate = true;
 				}
 
 				$image_args['width']  = isset( $image_meta['width'] ) ? $image_meta['width'] : 0;
@@ -493,6 +497,7 @@ class Tachyon {
 						$smaller_height = ( ( $image_meta['height'] < $image_args['height'] ) ? $image_meta['height'] : $image_args['height'] );
 
 						$tachyon_args[ $transform ] = $smaller_width . ',' . $smaller_height;
+						$is_intermediate = true;
 					} else {
 						$tachyon_args[ $transform ] = $image_args['width'] . ',' . $image_args['height'];
 					}
@@ -533,7 +538,8 @@ class Tachyon {
 				$image = array(
 					tachyon_url( $image_url, $tachyon_args ),
 					$image_args['width'],
-					$image_args['height']
+					$image_args['height'],
+					$is_intermediate,
 				);
 			} elseif ( is_array( $size ) ) {
 				// Pull width and height values from the provided array, if possible
@@ -551,6 +557,7 @@ class Tachyon {
 					// Use the resized image dimensions.
 					$width = $image_resized[6];
 					$height = $image_resized[7];
+					$is_intermediate = true;
 				} else {
 					// Resized image would be larger than original.
 					$width = $image_meta['width'];
@@ -584,7 +591,8 @@ class Tachyon {
 				$image = array(
 					tachyon_url( $image_url, $tachyon_args ),
 					$width,
-					$height
+					$height,
+					$is_intermediate,
 				);
 			}
 		}
