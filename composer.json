@@ -1,5 +1,5 @@
 {
-    "name": "humanmade/tachyon",
+    "name": "humanmade/tachyon-plugin",
     "description": "Rewrites WordPress image URLs to use Tachyon",
     "type": "wordpress-plugin",
     "license": "GPL-3.0",
