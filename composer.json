@@ -1,0 +1,13 @@
+{
+    "name": "humanmade/tachyon",
+    "description": "Rewrites WordPress image URLs to use Tachyon",
+    "type": "wordpress-plugin",
+    "license": "GPL-3.0",
+    "authors": [
+        {
+            "name": "Joe Hoyle",
+            "email": "joe@humanmade.com"
+        }
+    ],
+    "require": {}
+}
