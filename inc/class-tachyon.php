@@ -59,6 +59,9 @@ class Tachyon {
 
 		// Responsive image srcset substitution
 		add_filter( 'wp_calculate_image_srcset', array( $this, 'filter_srcset_array' ), 10, 5 );
+
+		// Filter meta data to include all image sizes.
+		add_filter( 'wp_get_attachment_metadata', array( $this, 'filter_attachment_meta_data' ), 10, 2 );
 	}
 
 	/**
@@ -664,6 +667,51 @@ class Tachyon {
 		}
 
 		return $sources;
+	}
+
+	/**
+	 * Filter meta data to include all image sizes.
+	 *
+	 * This is required to ensure WordPress runs the `wp_calculate_image_srcset`
+	 * filter when calculating the srcset and to ensure new image sizes are
+	 * included when Tachyon filters the srcset.
+	 *
+	 * @param array|bool $data          Array of meta data for the given attachment, or false
+	 *                                  if the object does not exist.
+	 * @param int        $attachment_id Attachment post ID.
+	 * @return array|bool Modified image meta data to include crops not saved on upload.
+	 */
+	public function filter_attachment_meta_data( $data, $attachment_id ) {
+		if ( ! is_array( $data ) || ! wp_attachment_is_image( $attachment_id ) ) {
+			return $data;
+		}
+
+		$image_sizes = self::image_sizes();
+		$mime_type = get_post_mime_type( $attachment_id );
+		$filename = pathinfo( $data['file'], PATHINFO_FILENAME );
+		$ext = pathinfo( $data['file'], PATHINFO_EXTENSION );
+
+		foreach ( $image_sizes as $size => $crop ) {
+			if ( isset( $data['sizes'][ $size ] ) ) {
+				// Meta data is set.
+				continue;
+			}
+
+			if ( 'full' === $size ) {
+				// Full is a special case.
+				continue;
+			}
+
+			// Add meta data with fake WP style file name.
+			$data['sizes'][ $size ] = array(
+				'width' => (int) $crop['width'],
+				'height' => (int) $crop['height'],
+				'file' => "{$filename}-{$crop['width']}x{$crop['height']}.{$ext}",
+				'mime-type' => $mime_type,
+			);
+		}
+
+		return $data;
 	}
 
 	/**
