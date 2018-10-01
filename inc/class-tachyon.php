@@ -690,6 +690,8 @@ class Tachyon {
 		$mime_type = get_post_mime_type( $attachment_id );
 		$filename = pathinfo( $data['file'], PATHINFO_FILENAME );
 		$ext = pathinfo( $data['file'], PATHINFO_EXTENSION );
+		$orig_w = $data['width'];
+		$orig_h = $data['height'];
 
 		foreach ( $image_sizes as $size => $crop ) {
 			if ( isset( $data['sizes'][ $size ] ) ) {
@@ -702,11 +704,21 @@ class Tachyon {
 				continue;
 			}
 
+			$new_dims = image_resize_dimensions( $orig_w, $orig_h, $crop['width'], $crop['height'], $crop['crop'] );
+
+			if ( ! $new_dims ) {
+				continue;
+			}
+
+			$w = (int) $new_dims[6];
+			$h = (int) $new_dims[7];
+
+
 			// Add meta data with fake WP style file name.
 			$data['sizes'][ $size ] = array(
-				'width' => (int) $crop['width'],
-				'height' => (int) $crop['height'],
-				'file' => "{$filename}-{$crop['width']}x{$crop['height']}.{$ext}",
+				'width' => $w,
+				'height' => $h,
+				'file' => "{$filename}-{$w}x{$h}.{$ext}",
 				'mime-type' => $mime_type,
 			);
 		}
