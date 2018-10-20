@@ -125,6 +125,22 @@ class Tachyon {
 
 			$image_sizes = self::image_sizes();
 			$upload_dir = wp_upload_dir();
+			$attachment_ids = array();
+
+			foreach ( $images[0] as $tag ) {
+				if ( preg_match( '/wp-image-([0-9]+)/i', $tag, $class_id ) && absint( $class_id[1] ) ) {
+					// Overwrite the ID when the same image is included more than once.
+					$attachment_ids[ $class_id[1] ] = true;
+				}
+			}
+
+			if ( count( $attachment_ids ) > 1 ) {
+				/*
+				 * Warm the object cache with post and meta information for all found
+				 * images to avoid making individual database calls.
+				 */
+				_prime_post_caches( array_keys( $attachment_ids ), false, true );
+			}
 
 			foreach ( $images[0] as $index => $tag ) {
 				// Default to resize, though fit may be used in certain cases where a dimension cannot be ascertained
