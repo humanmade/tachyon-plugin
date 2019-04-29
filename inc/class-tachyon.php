@@ -250,7 +250,7 @@ class Tachyon {
 									}
 								}
 
-								if ( isset( $size ) && false === $width && false === $height && 'full' != $size && array_key_exists( $size, $image_sizes ) ) {
+								if ( isset( $size ) && false === $width && false === $height && 'full' !== $size && array_key_exists( $size, $image_sizes ) ) {
 									$width = (int) $image_sizes[ $size ]['width'];
 									$height = (int) $image_sizes[ $size ]['height'];
 									$transform = $image_sizes[ $size ]['crop'] ? 'resize' : 'fit';
