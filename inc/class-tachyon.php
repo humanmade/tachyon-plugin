@@ -839,7 +839,7 @@ class Tachyon {
 	 *
 	 * @author JetPack Photo / Automattic
 	 * @param null|WP_Error $response Result to send to the client. Usually a WP_REST_Response or WP_Error.
-	 * @param array           $endpoint_data
+	 * @param array $endpoint_data Route handler used for the request.
 	 * @param WP_REST_Request $request  Request used to generate the response.
 	 *
 	 * @return null|WP_Error The original response object without modification.
