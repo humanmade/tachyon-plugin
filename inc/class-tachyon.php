@@ -872,7 +872,7 @@ class Tachyon {
 	 * every used here, we can always remove it without ever worrying
 	 * about breaking any other configuration.
 	 *
-	 * @param mixed $response
+	 * @param mixed $response The result to send to the client.
 	 * @return mixed Unchanged $response
 	 */
 	public function cleanup_rest_image_downsize( $response ) {
