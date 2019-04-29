@@ -56,6 +56,8 @@ class Tachyon {
 
 		// Core image retrieval
 		add_filter( 'image_downsize', array( $this, 'filter_image_downsize' ), 10, 3 );
+		add_filter( 'rest_request_before_callbacks', array( $this, 'should_rest_image_downsize' ), 10, 3 );
+		add_filter( 'rest_request_after_callbacks', array( $this, 'cleanup_rest_image_downsize' ) );
 
 		// Responsive image srcset substitution
 		add_filter( 'wp_calculate_image_srcset', array( $this, 'filter_srcset_array' ), 10, 5 );
@@ -233,9 +235,27 @@ class Tachyon {
 
 						if ( $attachment_id ) {
 							$attachment = get_post( $attachment_id );
-
 							// Basic check on returned post object
 							if ( is_object( $attachment ) && ! is_wp_error( $attachment ) && 'attachment' == $attachment->post_type ) {
+
+								// If we still don't have a size for the image, use the attachment_id
+								// to lookup the size for the image in the URL.
+								if ( ! isset( $size ) ) {
+									$meta = wp_get_attachment_metadata( $attachment_id );
+									if ( $meta['sizes'] ) {
+										$sizes = wp_list_filter( $meta['sizes'], [ 'file' => basename( $src ) ] );
+										if ( $sizes ) {
+											$size = array_pop( array_keys( $sizes ) );
+										}
+									}
+								}
+
+								if ( isset( $size ) && false === $width && false === $height && 'full' !== $size && array_key_exists( $size, $image_sizes ) ) {
+									$width = (int) $image_sizes[ $size ]['width'];
+									$height = (int) $image_sizes[ $size ]['height'];
+									$transform = $image_sizes[ $size ]['crop'] ? 'resize' : 'fit';
+								}
+
 								$src_per_wp = wp_get_attachment_image_src( $attachment_id, isset( $size ) ? $size : 'full' );
 
 								if ( self::validate_image_url( $src_per_wp[0] ) ) {
@@ -336,9 +356,10 @@ class Tachyon {
 					 * 	 @type $src_orig Original Image URL.
 					 * 	 @type $width Image width.
 					 * 	 @type $height Image height.
+					 * 	 @type $attachment_id Attachment ID.
 					 * }
 					 */
-					$args = apply_filters( 'tachyon_post_image_args', $args, compact( 'tag', 'src', 'src_orig', 'width', 'height', 'attachment_id' ) );
+					$args = apply_filters( 'tachyon_post_image_args', $args, compact( 'tag', 'src', 'src_orig', 'width', 'height', 'attachment_id', 'size' ) );
 
 					$tachyon_url = tachyon_url( $src, $args );
 
@@ -491,8 +512,20 @@ class Tachyon {
 					$is_intermediate = true;
 				}
 
-				$image_args['width']  = isset( $image_meta['width'] ) ? $image_meta['width'] : 0;
-				$image_args['height'] = isset( $image_meta['height'] ) ? $image_meta['height'] : 0;
+				// If we can't get the width from the image size args, use the width of the
+				// image metadata. We only do this is image_args['width'] is not set, because
+				// we don't want to lose this data. $image_args is used as the Tachyon URL param
+				// args, so we want to keep the original image sizes args. For example, if the image
+				// size is 300x300px, non-cropped, we want to pass `fit=300,300` to Tachyon, instead
+				// of say `resize=300,225`, because semantically, the image size is registered as
+				// 300x300 un-cropped, not 300x225 cropped.
+				if ( empty( $image_args['width'] ) ) {
+					$image_args['width'] = isset( $image_meta['width'] ) ? $image_meta['width'] : 0;
+				}
+
+				if ( empty( $image_args['height'] ) ) {
+					$image_args['height'] = isset( $image_meta['height'] ) ? $image_meta['height'] : 0;
+				}
 
 				list( $image_args['width'], $image_args['height'] ) = image_constrain_size_for_editor( $image_args['width'], $image_args['height'], $size, 'display' );
 
@@ -550,11 +583,14 @@ class Tachyon {
 				 */
 				$tachyon_args = apply_filters( 'tachyon_image_downsize_string', $tachyon_args, compact( 'image_args', 'image_url', 'attachment_id', 'size', 'transform' ) );
 
-				// Generate Tachyon URL
+				// Generate Tachyon URL.
+				// We want the width / height params to match the dimensions of the image,
+				// not the resize dimensions. The Resize dimensions might be "Max width" /
+				// "Max-height" dimensions, rather than absolute image size.
 				$image = array(
 					tachyon_url( $image_url, $tachyon_args ),
-					$image_args['width'],
-					$image_args['height'],
+					isset( $image_meta['width'] ) ? $image_meta['width'] : $image_args['width'],
+					isset( $image_meta['height'] ) ? $image_meta['height'] : $image_args['height'],
 					$is_intermediate,
 				);
 			} elseif ( is_array( $size ) ) {
@@ -787,5 +823,74 @@ class Tachyon {
 		}
 
 		return is_array( self::$image_sizes ) ? self::$image_sizes : array();
+	}
+
+
+	/**
+	 * Determine if image_downsize should utilize Tachyon via REST API.
+	 *
+	 * The WordPress Block Editor (Gutenberg) and other REST API consumers using the wp/v2/media endpoint, especially in the "edit"
+	 * context is more akin to the is_admin usage of Tachyon (see filter_image_downsize). Since consumers are trying to edit content in posts,
+	 * Tachyon should not fire as it will fire later on display. By aborting an attempt to change an image here, we
+	 * prevents issues like https://github.com/Automattic/jetpack/issues/10580
+	 *
+	 * To determine if we're using the wp/v2/media endpoint, we hook onto the `rest_request_before_callbacks` filter and
+	 * if determined we are using it in the edit context, we'll false out the `tachyon_override_image_downsize` filter.
+	 *
+	 * @author JetPack Photo / Automattic
+	 * @param null|WP_Error $response Result to send to the client. Usually a WP_REST_Response or WP_Error.
+	 * @param array $endpoint_data Route handler used for the request.
+	 * @param WP_REST_Request $request  Request used to generate the response.
+	 *
+	 * @return null|WP_Error The original response object without modification.
+	 */
+	public function should_rest_image_downsize( $response, $endpoint_data, $request ) {
+		if ( ! is_a( $request , 'WP_REST_Request' ) ) {
+			return $response; // Something odd is happening. Do nothing and return the response.
+		}
+
+		if ( is_wp_error( $response ) ) {
+			// If we're going to return an error, we don't need to do anything with Photon.
+			return $response;
+		}
+
+		$route = $request->get_route();
+
+		if ( false !== strpos( $route, 'wp/v2/media' ) && 'edit' === $request['context'] ) {
+			// Don't use `__return_true()`: Use something unique. See ::_override_image_downsize_in_rest_edit_context()
+			// Late execution to avoid conflict with other plugins as we really don't want to run in this situation.
+			add_filter( 'tachyon_override_image_downsize', array( $this, '_override_image_downsize_in_rest_edit_context' ), 999999 );
+		}
+
+		return $response;
+	}
+
+
+	/**
+	 * Remove the override we may have added in ::should_rest_image_downsize()
+	 * Since ::_override_image_downsize_in_rest_edit_context() is only
+	 * every used here, we can always remove it without ever worrying
+	 * about breaking any other configuration.
+	 *
+	 * @param mixed $response The result to send to the client.
+	 * @return mixed Unchanged $response
+	 */
+	public function cleanup_rest_image_downsize( $response ) {
+		remove_filter( 'tachyon_override_image_downsize', array( $this, '_override_image_downsize_in_rest_edit_context' ), 999999 );
+		return $response;
+	}
+
+	/**
+	 * Used internally by ::should_rest_image_downsize() to not tachyonize
+	 * image URLs in ?context=edit REST requests.
+	 * MUST NOT be used anywhere else.
+	 * We use a unique function instead of __return_true so that we can clean up
+	 * after ourselves without breaking anyone else's filters.
+	 *
+	 * @internal
+	 * @return true
+	 */
+	public function _override_image_downsize_in_rest_edit_context() {
+		return true;
 	}
 }
