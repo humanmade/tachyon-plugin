@@ -356,7 +356,7 @@ class Tachyon {
 					 * 	 @type $src_orig Original Image URL.
 					 * 	 @type $width Image width.
 					 * 	 @type $height Image height.
-					 * 	 @type $attachment_id Attachment ID
+					 * 	 @type $attachment_id Attachment ID.
 					 * }
 					 */
 					$args = apply_filters( 'tachyon_post_image_args', $args, compact( 'tag', 'src', 'src_orig', 'width', 'height', 'attachment_id', 'size' ) );
