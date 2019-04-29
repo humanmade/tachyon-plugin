@@ -520,7 +520,7 @@ class Tachyon {
 				// of say `resize=300,225`, because semantically, the image size is registered as
 				// 300x300 un-cropped, not 300x225 cropped.
 				if ( empty( $image_args['width'] ) ) {
-					$image_args['width']  = isset( $image_meta['width'] ) ? $image_meta['width'] : 0;
+					$image_args['width'] = isset( $image_meta['width'] ) ? $image_meta['width'] : 0;
 				}
 
 				if ( empty( $image_args['height'] ) ) {
