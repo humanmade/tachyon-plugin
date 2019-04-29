@@ -835,7 +835,7 @@ class Tachyon {
 	 * prevents issues like https://github.com/Automattic/jetpack/issues/10580
 	 *
 	 * To determine if we're using the wp/v2/media endpoint, we hook onto the `rest_request_before_callbacks` filter and
-	 * if determined we are using it in the edit context, we'll false out the `tachyon__override_image_downsize` filter.
+	 * if determined we are using it in the edit context, we'll false out the `tachyon_override_image_downsize` filter.
 	 *
 	 * @author JetPack Photo / Automattic
 	 * @param null|WP_Error $response Result to send to the client. Usually a WP_REST_Response or WP_Error.
