@@ -838,7 +838,7 @@ class Tachyon {
 	 * if determined we are using it in the edit context, we'll false out the `tachyon__override_image_downsize` filter.
 	 *
 	 * @author JetPack Photo / Automattic
-	 * @param null|WP_Error   $response
+	 * @param null|WP_Error $response Result to send to the client. Usually a WP_REST_Response or WP_Error.
 	 * @param array           $endpoint_data
 	 * @param WP_REST_Request $request  Request used to generate the response.
 	 *
