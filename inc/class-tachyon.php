@@ -881,7 +881,7 @@ class Tachyon {
 	}
 
 	/**
-	 * Used internally by ::should_rest_image_downsize() to not photonize
+	 * Used internally by ::should_rest_image_downsize() to not tachyonize
 	 * image URLs in ?context=edit REST requests.
 	 * MUST NOT be used anywhere else.
 	 * We use a unique function instead of __return_true so that we can clean up
