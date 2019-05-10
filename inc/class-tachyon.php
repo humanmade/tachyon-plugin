@@ -245,7 +245,8 @@ class Tachyon {
 									if ( $meta['sizes'] ) {
 										$sizes = wp_list_filter( $meta['sizes'], [ 'file' => basename( $src ) ] );
 										if ( $sizes ) {
-											$size = array_pop( array_keys( $sizes ) );
+											$size_names = array_keys( $sizes );
+											$size = array_pop( $size_names );
 										}
 									}
 								}
