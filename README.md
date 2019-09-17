@@ -49,7 +49,7 @@ $args      = [
 	'quality' => 90
 ];
 
-$url = tachyon_url( $s3_image_url, $args );
+$url = tachyon_url( $image_url, $args );
 ```
 
 ### Filters
