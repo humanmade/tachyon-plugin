@@ -478,6 +478,7 @@ class Tachyon {
 
 		// Get the image URL and proceed with Tachyon-ification if successful
 		$image_url = wp_get_attachment_url( $attachment_id );
+		$full_size_meta = wp_get_attachment_metadata( $attachment_id );
 		$is_intermediate = false;
 
 		if ( $image_url ) {
@@ -496,11 +497,11 @@ class Tachyon {
 
 				// 'full' is a special case: We need consistent data regardless of the requested size.
 				if ( 'full' == $size ) {
-					$image_meta = wp_get_attachment_metadata( $attachment_id );
+					$image_meta = $full_size_meta;
 				} elseif ( ! $image_meta ) {
 					// If we still don't have any image meta at this point, it's probably from a custom thumbnail size
 					// for an image that was uploaded before the custom image was added to the theme.  Try to determine the size manually.
-					$image_meta = wp_get_attachment_metadata( $attachment_id );
+					$image_meta = $full_size_meta;
 					if ( isset( $image_meta['width'] ) && isset( $image_meta['height'] ) ) {
 						$image_resized = image_resize_dimensions( $image_meta['width'], $image_meta['height'], $image_args['width'], $image_args['height'], $image_args['crop'] );
 						if ( $image_resized ) { // This could be false when the requested image size is larger than the full-size image.
@@ -541,22 +542,16 @@ class Tachyon {
 						$tachyon_args['w'] = $image_args['width'];
 					}
 				} else {
-					if ( ( 'resize' === $transform ) && $image_meta = wp_get_attachment_metadata( $attachment_id ) ) {
-						// Lets make sure that we don't upscale images since wp never upscales them as well
-						$smaller_width  = ( ( $image_meta['width']  < $image_args['width']  ) ? $image_meta['width']  : $image_args['width']  );
-						$smaller_height = ( ( $image_meta['height'] < $image_args['height'] ) ? $image_meta['height'] : $image_args['height'] );
-						
-						// Reset $image_meta dimensions to resized values.
-						$image_meta['width']  = $smaller_width;
-						$image_meta['height'] = $smaller_height;
-
-						$tachyon_args[ $transform ] = $smaller_width . ',' . $smaller_height;
-						$is_intermediate = true;
-					} else {
-						$tachyon_args[ $transform ] = $image_args['width'] . ',' . $image_args['height'];
+					if ( 'resize' === $transform || ! $image_meta ) {
+						$image_meta = $full_size_meta;
 					}
 
-					if ( 'resize' === $transform && is_array( $image_args['crop'] ) ) {
+					$image_args['width'] = min( (int) $image_args['width'], (int) $image_meta['width'] );
+					$image_args['height'] = min( (int) $image_args['height'], (int) $image_meta['height'] );
+					$tachyon_args[ $transform ] = $image_args['width'] . ',' . $image_args['height'];
+					$is_intermediate = ( $image_args['width'] < $full_size_meta['width'] || $image_args['height'] < $full_size_meta['height'] );
+
+					if ( $is_intermediate && 'resize' === $transform && is_array( $image_args['crop'] ) ) {
 						$tachyon_args['gravity'] = implode( '', array_map( function ( $v ) {
 							$map = [
 								'top' => 'north',
