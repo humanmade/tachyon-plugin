@@ -402,6 +402,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 		$valid_urls = (array) $valid_urls;
 		$attachment_id = self::$attachment_ids[ $file ];
 		$content = str_replace( '%%ID%%', $attachment_id, $content );
+		$content = str_replace( '%%BASE_URL%%', wp_upload_dir()['baseurl'], $content );
 		$post_id = $this->factory()->post->create( [
 			'post_content' => $content,
 		] );
@@ -419,7 +420,9 @@ class Tests_Resizing extends WP_UnitTestCase {
 	 *
 	 * return array[] {
 	 *     $file         string The basename of the uploaded file to tests against.
-	 *     $content      string The content being filtered. `%%ID%%` is replaced with the attachment ID during the test.
+	 *     $content      string The content being filtered.
+	 *                          `%%ID%%` is replaced with the attachment ID during the test.
+	 *                          `%%BASE_URL%%` is replaced with base uploads directory during the test.
 	 *     $valid_urls   array  Valid Tachyon URLs for resizing.
 	 * }
 	 */
@@ -428,14 +431,14 @@ class Tests_Resizing extends WP_UnitTestCase {
 			// Classic editor formatted image tags.
 			[
 				'tachyon',
-				'<p><img class="alignnone wp-image-%%ID%% size-thumb" src="http://example.org/wp-content/uploads/tachyon-150x150.jpg" alt="" width="150" height="150" /></p>',
+				'<p><img class="alignnone wp-image-%%ID%% size-thumb" src="%%BASE_URL%%/tachyon-150x150.jpg" alt="" width="150" height="150" /></p>',
 				[
 					'http://tachy.on/u/tachyon.jpg?resize=150,150',
 				],
 			],
 			[
 				'tachyon',
-				'<p><img class="alignnone wp-image-%%ID%% size-medium" src="http://example.org/wp-content/uploads/tachyon-300x169.jpg" alt="" width="300" height="169" /></p>',
+				'<p><img class="alignnone wp-image-%%ID%% size-medium" src="%%BASE_URL%%/tachyon-300x169.jpg" alt="" width="300" height="169" /></p>',
 				[
 					'http://tachy.on/u/tachyon.jpg?fit=300,169',
 					'http://tachy.on/u/tachyon.jpg?resize=300,169',
@@ -444,7 +447,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 			],
 			[
 				'tachyon',
-				'<p><img class="alignnone wp-image-%%ID%% size-large" src="http://example.org/wp-content/uploads/tachyon-1024x575.jpg" alt="" width="1024" height="575" /></p>',
+				'<p><img class="alignnone wp-image-%%ID%% size-large" src="%%BASE_URL%%/tachyon-1024x575.jpg" alt="" width="1024" height="575" /></p>',
 				[
 					'http://tachy.on/u/tachyon.jpg?fit=1024,575',
 					'http://tachy.on/u/tachyon.jpg?resize=1024,575',
@@ -454,7 +457,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 			],
 			[
 				'tachyon',
-				'<p><img class="alignnone wp-image-%%ID%% size-full" src="http://example.org/wp-content/uploads/tachyon.jpg" alt="" width="1280" height="719" /></p>',
+				'<p><img class="alignnone wp-image-%%ID%% size-full" src="%%BASE_URL%%/tachyon.jpg" alt="" width="1280" height="719" /></p>',
 				[
 					'http://tachy.on/u/tachyon.jpg?fit=1280,719',
 					'http://tachy.on/u/tachyon.jpg?resize=1280,719',
@@ -465,21 +468,21 @@ class Tests_Resizing extends WP_UnitTestCase {
 			],
 			[
 				'tachyon',
-				'<p><img class="alignnone wp-image-%%ID%% size-too-wide-shorter-crop" src="http://example.org/wp-content/uploads/tachyon-1280x500.jpg" alt="" width="1280" height="500" /></p>',
+				'<p><img class="alignnone wp-image-%%ID%% size-too-wide-shorter-crop" src="%%BASE_URL%%/tachyon-1280x500.jpg" alt="" width="1280" height="500" /></p>',
 				[
 					'http://tachy.on/u/tachyon.jpg?resize=1280,500',
 				],
 			],
 			[
 				'tachyon',
-				'<p><img class="alignnone wp-image-%%ID%% size-too-tall-narrower-crop" src="http://example.org/wp-content/uploads/tachyon-1000x719.jpg" alt="" width="1000" height="719" /></p>',
+				'<p><img class="alignnone wp-image-%%ID%% size-too-tall-narrower-crop" src="%%BASE_URL%%/tachyon-1000x719.jpg" alt="" width="1000" height="719" /></p>',
 				[
 					'http://tachy.on/u/tachyon.jpg?resize=1000,719',
 				],
 			],
 			[
 				'tachyon',
-				'<p><img class="alignnone wp-image-%%ID%% size-oversize-late" src="http://example.org/wp-content/uploads/tachyon.jpg" alt="" width="1280" height="719" /></p>',
+				'<p><img class="alignnone wp-image-%%ID%% size-oversize-late" src="%%BASE_URL%%/tachyon.jpg" alt="" width="1280" height="719" /></p>',
 				[
 					'http://tachy.on/u/tachyon.jpg?fit=1280,719',
 					'http://tachy.on/u/tachyon.jpg?resize=1280,719',
@@ -490,14 +493,14 @@ class Tests_Resizing extends WP_UnitTestCase {
 			],
 			[
 				'tachyon-large',
-				'<p><img class="alignnone wp-image-%%ID%% size-thumb" src="http://example.org/wp-content/uploads/tachyon-large-scaled-150x150.jpg" alt="" width="150" height="150" /></p>',
+				'<p><img class="alignnone wp-image-%%ID%% size-thumb" src="%%BASE_URL%%/tachyon-large-scaled-150x150.jpg" alt="" width="150" height="150" /></p>',
 				[
 					'http://tachy.on/u/tachyon-large-scaled.jpg?resize=150,150',
 				],
 			],
 			[
 				'tachyon-large',
-				'<p><img class="alignnone wp-image-%%ID%% size-medium" src="http://example.org/wp-content/uploads/tachyon-large-scaled-300x169.jpg" alt="" width="300" height="169" /></p>',
+				'<p><img class="alignnone wp-image-%%ID%% size-medium" src="%%BASE_URL%%/tachyon-large-scaled-300x169.jpg" alt="" width="300" height="169" /></p>',
 				[
 					'http://tachy.on/u/tachyon-large-scaled.jpg?fit=300,169',
 					'http://tachy.on/u/tachyon-large-scaled.jpg?resize=300,169',
@@ -506,7 +509,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 			],
 			[
 				'tachyon-large',
-				'<p><img class="alignnone wp-image-%%ID%% size-large" src="http://example.org/wp-content/uploads/tachyon-large-scaled-1024x576.jpg" alt="" width="1024" height="576" /></p>',
+				'<p><img class="alignnone wp-image-%%ID%% size-large" src="%%BASE_URL%%/tachyon-large-scaled-1024x576.jpg" alt="" width="1024" height="576" /></p>',
 				[
 					'http://tachy.on/u/tachyon-large-scaled.jpg?fit=1024,576',
 					'http://tachy.on/u/tachyon-large-scaled.jpg?resize=1024,576',
@@ -516,7 +519,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 			],
 			[
 				'tachyon-large',
-				'<p><img class="alignnone wp-image-%%ID%% size-full" src="http://example.org/wp-content/uploads/tachyon-large-scaled.jpg" alt="" width="1280" height="719" /></p>',
+				'<p><img class="alignnone wp-image-%%ID%% size-full" src="%%BASE_URL%%/tachyon-large-scaled.jpg" alt="" width="1280" height="719" /></p>',
 				[
 					'http://tachy.on/u/tachyon-large-scaled.jpg?fit=1280,719',
 					'http://tachy.on/u/tachyon-large-scaled.jpg?resize=1280,719',
@@ -527,7 +530,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 			],
 			[
 				'tachyon-large',
-				'<p><img class="alignnone wp-image-%%ID%% size-oversize-late" src="http://example.org/wp-content/uploads/tachyon-large-scaled-1778x1000.jpg" alt="" width="1778" height="1000" /></p>',
+				'<p><img class="alignnone wp-image-%%ID%% size-oversize-late" src="%%BASE_URL%%/tachyon-large-scaled-1778x1000.jpg" alt="" width="1778" height="1000" /></p>',
 				[
 					'http://tachy.on/u/tachyon-large-scaled.jpg?fit=1778,1000',
 					'http://tachy.on/u/tachyon-large-scaled.jpg?resize=1778,1000',
@@ -539,14 +542,14 @@ class Tests_Resizing extends WP_UnitTestCase {
 			],
 			[
 				'tachyon-large',
-				'<p><img class="alignnone wp-image-%%ID%% size-too-wide-shorter-crop" src="http://example.org/wp-content/uploads/tachyon-large-scaled-1500x500.jpg" alt="" width="1500" height="500" /></p>',
+				'<p><img class="alignnone wp-image-%%ID%% size-too-wide-shorter-crop" src="%%BASE_URL%%/tachyon-large-scaled-1500x500.jpg" alt="" width="1500" height="500" /></p>',
 				[
 					'http://tachy.on/u/tachyon-large-scaled.jpg?resize=1500,500',
 				],
 			],
 			[
 				'tachyon-large',
-				'<p><img class="alignnone wp-image-%%ID%% size-too-tall-narrower-crop" src="http://example.org/wp-content/uploads/tachyon-large-scaled-1000x1000.jpg" alt="" width="1000" height="1000" /></p>',
+				'<p><img class="alignnone wp-image-%%ID%% size-too-tall-narrower-crop" src="%%BASE_URL%%/tachyon-large-scaled-1000x1000.jpg" alt="" width="1000" height="1000" /></p>',
 				[
 					'http://tachy.on/u/tachyon-large-scaled.jpg?resize=1000,1000',
 				],
@@ -554,14 +557,14 @@ class Tests_Resizing extends WP_UnitTestCase {
 			// Block editor formatted image tags.
 			[
 				'tachyon',
-				'<figure class="wp-block-image size-thumbnail"><img src="http://example.org/wp-content/uploads/tachyon-150x150.jpg" alt="" class="wp-image-%%ID%%"></figure>',
+				'<figure class="wp-block-image size-thumbnail"><img src="%%BASE_URL%%/tachyon-150x150.jpg" alt="" class="wp-image-%%ID%%"></figure>',
 				[
 					'http://tachy.on/u/tachyon.jpg?resize=150,150',
 				],
 			],
 			[
 				'tachyon',
-				'<figure class="wp-block-image size-medium"><img src="http://example.org/wp-content/uploads/tachyon-300x169.jpg" alt="" class="wp-image-%%ID%%"></figure>',
+				'<figure class="wp-block-image size-medium"><img src="%%BASE_URL%%/tachyon-300x169.jpg" alt="" class="wp-image-%%ID%%"></figure>',
 				[
 					'http://tachy.on/u/tachyon.jpg?fit=300,169',
 					'http://tachy.on/u/tachyon.jpg?resize=300,169',
@@ -570,7 +573,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 			],
 			[
 				'tachyon',
-				'<figure class="wp-block-image size-large"><img src="http://example.org/wp-content/uploads/tachyon-1024x575.jpg" alt="" class="wp-image-%%ID%%"></figure>',
+				'<figure class="wp-block-image size-large"><img src="%%BASE_URL%%/tachyon-1024x575.jpg" alt="" class="wp-image-%%ID%%"></figure>',
 				[
 					'http://tachy.on/u/tachyon.jpg?fit=1024,575',
 					'http://tachy.on/u/tachyon.jpg?resize=1024,575',
@@ -580,7 +583,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 			],
 			[
 				'tachyon',
-				'<figure class="wp-block-image size-full"><img src="http://example.org/wp-content/uploads/tachyon.jpg" alt="" class="wp-image-%%ID%%"></figure>',
+				'<figure class="wp-block-image size-full"><img src="%%BASE_URL%%/tachyon.jpg" alt="" class="wp-image-%%ID%%"></figure>',
 				[
 					'http://tachy.on/u/tachyon.jpg?fit=1280,719',
 					'http://tachy.on/u/tachyon.jpg?resize=1280,719',
@@ -591,21 +594,21 @@ class Tests_Resizing extends WP_UnitTestCase {
 			],
 			[
 				'tachyon',
-				'<figure class="wp-block-image size-too-wide-shorter-crop"><img src="http://example.org/wp-content/uploads/tachyon-1280x500.jpg" alt="" class="wp-image-%%ID%%"></figure>',
+				'<figure class="wp-block-image size-too-wide-shorter-crop"><img src="%%BASE_URL%%/tachyon-1280x500.jpg" alt="" class="wp-image-%%ID%%"></figure>',
 				[
 					'http://tachy.on/u/tachyon.jpg?resize=1280,500',
 				],
 			],
 			[
 				'tachyon',
-				'<figure class="wp-block-image size-too-tall-narrower-crop"><img src="http://example.org/wp-content/uploads/tachyon-1000x719.jpg" alt="" class="wp-image-%%ID%%"></figure>',
+				'<figure class="wp-block-image size-too-tall-narrower-crop"><img src="%%BASE_URL%%/tachyon-1000x719.jpg" alt="" class="wp-image-%%ID%%"></figure>',
 				[
 					'http://tachy.on/u/tachyon.jpg?resize=1000,719',
 				],
 			],
 			[
 				'tachyon',
-				'<figure class="wp-block-image size-oversize-late"><img src="http://example.org/wp-content/uploads/tachyon.jpg" alt="" class="wp-image-%%ID%%"></figure>',
+				'<figure class="wp-block-image size-oversize-late"><img src="%%BASE_URL%%/tachyon.jpg" alt="" class="wp-image-%%ID%%"></figure>',
 				[
 					'http://tachy.on/u/tachyon.jpg?fit=1280,719',
 					'http://tachy.on/u/tachyon.jpg?resize=1280,719',
@@ -616,14 +619,14 @@ class Tests_Resizing extends WP_UnitTestCase {
 			],
 			[
 				'tachyon-large',
-				'<figure class="wp-block-image size-thumbnail"><img src="http://example.org/wp-content/uploads/tachyon-large-scaled-150x150.jpg" alt="" class="wp-image-%%ID%%"></figure>',
+				'<figure class="wp-block-image size-thumbnail"><img src="%%BASE_URL%%/tachyon-large-scaled-150x150.jpg" alt="" class="wp-image-%%ID%%"></figure>',
 				[
 					'http://tachy.on/u/tachyon-large-scaled.jpg?resize=150,150',
 				],
 			],
 			[
 				'tachyon-large',
-				'<figure class="wp-block-image size-medium"><img src="http://example.org/wp-content/uploads/tachyon-large-scaled-300x169.jpg" alt="" class="wp-image-%%ID%%"></figure>',
+				'<figure class="wp-block-image size-medium"><img src="%%BASE_URL%%/tachyon-large-scaled-300x169.jpg" alt="" class="wp-image-%%ID%%"></figure>',
 				[
 					'http://tachy.on/u/tachyon-large-scaled.jpg?fit=300,169',
 					'http://tachy.on/u/tachyon-large-scaled.jpg?resize=300,169',
@@ -632,7 +635,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 			],
 			[
 				'tachyon-large',
-				'<figure class="wp-block-image size-large"><img src="http://example.org/wp-content/uploads/tachyon-large-scaled-1024x576.jpg" alt="" class="wp-image-%%ID%%"></figure>',
+				'<figure class="wp-block-image size-large"><img src="%%BASE_URL%%/tachyon-large-scaled-1024x576.jpg" alt="" class="wp-image-%%ID%%"></figure>',
 				[
 					'http://tachy.on/u/tachyon-large-scaled.jpg?fit=1024,576',
 					'http://tachy.on/u/tachyon-large-scaled.jpg?resize=1024,576',
@@ -642,7 +645,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 			],
 			[
 				'tachyon-large',
-				'<figure class="wp-block-image size-full"><img src="http://example.org/wp-content/uploads/tachyon-large-scaled.jpg" alt="" class="wp-image-%%ID%%"></figure>',
+				'<figure class="wp-block-image size-full"><img src="%%BASE_URL%%/tachyon-large-scaled.jpg" alt="" class="wp-image-%%ID%%"></figure>',
 				[
 					'http://tachy.on/u/tachyon-large-scaled.jpg?fit=2560,1440',
 					'http://tachy.on/u/tachyon-large-scaled.jpg?resize=2560,1440',
@@ -653,21 +656,21 @@ class Tests_Resizing extends WP_UnitTestCase {
 			],
 			[
 				'tachyon-large',
-				'<figure class="wp-block-image size-too-wide-shorter-crop"><img src="http://example.org/wp-content/uploads/tachyon-large-scaled-1500x500.jpg" alt="" class="wp-image-%%ID%%"></figure>',
+				'<figure class="wp-block-image size-too-wide-shorter-crop"><img src="%%BASE_URL%%/tachyon-large-scaled-1500x500.jpg" alt="" class="wp-image-%%ID%%"></figure>',
 				[
 					'http://tachy.on/u/tachyon-large-scaled.jpg?resize=1500,500',
 				],
 			],
 			[
 				'tachyon-large',
-				'<figure class="wp-block-image size-too-tall-narrower-crop"><img src="http://example.org/wp-content/uploads/tachyon-large-scaled-1000x1000.jpg" alt="" class="wp-image-%%ID%%"></figure>',
+				'<figure class="wp-block-image size-too-tall-narrower-crop"><img src="%%BASE_URL%%/tachyon-large-scaled-1000x1000.jpg" alt="" class="wp-image-%%ID%%"></figure>',
 				[
 					'http://tachy.on/u/tachyon-large-scaled.jpg?resize=1000,1000',
 				],
 			],
 			[
 				'tachyon-large',
-				'<figure class="wp-block-image size-oversize-late"><img src="http://example.org/wp-content/uploads/tachyon-large-scaled-1778x1000.jpg" alt="" class="wp-image-%%ID%%"></figure>',
+				'<figure class="wp-block-image size-oversize-late"><img src="%%BASE_URL%%/tachyon-large-scaled-1778x1000.jpg" alt="" class="wp-image-%%ID%%"></figure>',
 				[
 					'http://tachy.on/u/tachyon-large-scaled.jpg?fit=1778,1000',
 					'http://tachy.on/u/tachyon-large-scaled.jpg?resize=1778,1000',
