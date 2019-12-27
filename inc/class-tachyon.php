@@ -590,8 +590,8 @@ class Tachyon {
 				// "Max-height" dimensions, rather than absolute image size.
 				$image = array(
 					tachyon_url( $image_url, $tachyon_args ),
-					isset( $image_meta['width'] ) ? $image_meta['width'] : $image_args['width'],
-					isset( $image_meta['height'] ) ? $image_meta['height'] : $image_args['height'],
+					$image_args['width'],
+					$image_args['height'],
 					$is_intermediate,
 				);
 			} elseif ( is_array( $size ) ) {
