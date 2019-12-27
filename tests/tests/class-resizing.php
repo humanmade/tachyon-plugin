@@ -106,12 +106,14 @@ class Tests_Resizing extends WP_UnitTestCase {
 	 *
 	 * @dataProvider data_filtered_url
 	 */
-	function test_filtered_url( $file, $size, $valid_urls ) {
+	function test_filtered_url( $file, $size, $valid_urls, $expected_size ) {
 		$valid_urls = (array) $valid_urls;
 		$actual_src = wp_get_attachment_image_src( self::$attachment_ids[ $file ], $size );
 		$actual_url = $actual_src[0];
 
 		$this->assertContains( $actual_url, $valid_urls, "The resized image is expected to be {$actual_src[1]}x{$actual_src[2]}" );
+		$this->assertSame( $expected_size[0], $actual_src[1] );
+		$this->assertSame( $expected_size[1], $actual_src[2] );
 	}
 
 	/**
@@ -133,6 +135,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 				[
 					'http://tachy.on/u/tachyon.jpg?resize=150,150',
 				],
+				[ 150, 150 ],
 			],
 			[
 				'tachyon',
@@ -140,6 +143,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 				[
 					'http://tachy.on/u/tachyon.jpg?resize=150,150',
 				],
+				[ 150, 150 ],
 			],
 			[
 				'tachyon',
@@ -149,6 +153,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 					'http://tachy.on/u/tachyon.jpg?resize=300,169',
 					'http://tachy.on/u/tachyon.jpg?fit=300,300',
 				],
+				[ 300, 169 ],
 			],
 			[
 				'tachyon',
@@ -159,6 +164,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 					'http://tachy.on/u/tachyon.jpg?w=768',
 					'http://tachy.on/u/tachyon.jpg?w=768&h=431',
 				],
+				[ 768, 431 ],
 			],
 			[
 				'tachyon',
@@ -169,6 +175,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 					'http://tachy.on/u/tachyon.jpg?fit=1024,1024',
 					'http://tachy.on/u/tachyon.jpg?w=1024&h=575',
 				],
+				[ 1024, 575 ],
 			],
 			[
 				'tachyon',
@@ -180,6 +187,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 					'http://tachy.on/u/tachyon.jpg?w=1280&h=719',
 					'http://tachy.on/u/tachyon.jpg',
 				],
+				[ 1280, 719 ],
 			],
 			[
 				'tachyon',
@@ -191,6 +199,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 					'http://tachy.on/u/tachyon.jpg?w=1280&h=719',
 					'http://tachy.on/u/tachyon.jpg',
 				],
+				[ 1280, 719 ],
 			],
 			[
 				'tachyon',
@@ -202,6 +211,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 					'http://tachy.on/u/tachyon.jpg?w=1280&h=719',
 					'http://tachy.on/u/tachyon.jpg',
 				],
+				[ 1280, 719 ],
 			],
 			[
 				'tachyon',
@@ -209,6 +219,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 				[
 					'http://tachy.on/u/tachyon.jpg?resize=1280,500',
 				],
+				[ 1280, 500 ],
 			],
 			[
 				'tachyon',
@@ -216,6 +227,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 				[
 					'http://tachy.on/u/tachyon.jpg?resize=1000,719',
 				],
+				[ 1000, 719 ],
 			],
 			[
 				'tachyon',
@@ -226,6 +238,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 					'http://tachy.on/u/tachyon.jpg?fit=1024,1024',
 					'http://tachy.on/u/tachyon.jpg?w=1024&h=575',
 				],
+				[ 1024, 575 ],
 			],
 			[
 				'tachyon',
@@ -237,6 +250,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 					'http://tachy.on/u/tachyon.jpg?w=500&h=281',
 					'http://tachy.on/u/tachyon.jpg?w=500&h=300',
 				],
+				[ 500, 281 ],
 			],
 			[
 				'tachyon',
@@ -248,6 +262,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 					'http://tachy.on/u/tachyon.jpg?w=500&h=30',
 					'http://tachy.on/u/tachyon.jpg?w=53&h=30',
 				],
+				[ 53, 30 ],
 			],
 			[
 				'tachyon',
@@ -259,6 +274,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 					'http://tachy.on/u/tachyon.jpg?w=1280&h=719',
 					'http://tachy.on/u/tachyon.jpg',
 				],
+				[ 1280, 719 ],
 			],
 			[
 				'tachyon',
@@ -270,6 +286,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 					'http://tachy.on/u/tachyon.jpg?w=1280&h=719',
 					'http://tachy.on/u/tachyon.jpg',
 				],
+				[ 1280, 719 ],
 			],
 			[
 				'tachyon-large',
@@ -277,6 +294,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 				[
 					'http://tachy.on/u/tachyon-large-scaled.jpg?resize=150,150',
 				],
+				[ 150, 150 ],
 			],
 			[
 				'tachyon-large',
@@ -284,6 +302,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 				[
 					'http://tachy.on/u/tachyon-large-scaled.jpg?resize=150,150',
 				],
+				[ 150, 150 ],
 			],
 			[
 				'tachyon-large',
@@ -293,6 +312,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 					'http://tachy.on/u/tachyon-large-scaled.jpg?resize=300,169',
 					'http://tachy.on/u/tachyon-large-scaled.jpg?fit=300,300',
 				],
+				[ 300, 169 ],
 			],
 			[
 				'tachyon-large',
@@ -303,6 +323,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 					'http://tachy.on/u/tachyon-large-scaled.jpg?w=768',
 					'http://tachy.on/u/tachyon-large-scaled.jpg?w=768&h=432',
 				],
+				[ 768, 432 ],
 			],
 			[
 				'tachyon-large',
@@ -313,6 +334,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 					'http://tachy.on/u/tachyon-large-scaled.jpg?fit=1024,1024',
 					'http://tachy.on/u/tachyon-large-scaled.jpg?w=1024&h=576',
 				],
+				[ 1024, 576 ],
 			],
 			[
 				'tachyon-large',
@@ -324,6 +346,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 					'http://tachy.on/u/tachyon-large-scaled.jpg?w=2560&h=1440',
 					'http://tachy.on/u/tachyon-large-scaled.jpg',
 				],
+				[ 2560, 1440 ],
 			],
 			[
 				'tachyon-large',
@@ -336,6 +359,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 					'http://tachy.on/u/tachyon-large-scaled.jpg?w=2500&h=1500',
 					'http://tachy.on/u/tachyon-large-scaled.jpg?w=2500&h=1406',
 				],
+				[ 2500, 1406 ],
 			],
 			[
 				'tachyon-large',
@@ -348,6 +372,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 					'http://tachy.on/u/tachyon-large-scaled.jpg?w=1778&h=1000',
 					'http://tachy.on/u/tachyon-large-scaled.jpg?w=2000&h=1000',
 				],
+				[ 1778, 1000 ],
 			],
 			[
 				'tachyon-large',
@@ -355,6 +380,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 				[
 					'http://tachy.on/u/tachyon-large-scaled.jpg?resize=1500,500',
 				],
+				[ 1500, 500 ],
 			],
 			[
 				'tachyon-large',
@@ -362,6 +388,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 				[
 					'http://tachy.on/u/tachyon-large-scaled.jpg?resize=1000,1000',
 				],
+				[ 1000, 1000 ],
 			],
 		];
 	}
@@ -409,7 +436,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 		$this->go_to( get_permalink( $post_id ) );
 		the_post();
 
-		$the_content = get_echo( 'the_content' );
+		$the_content = \Tachyon::filter_the_content( $content ); // get_echo( 'the_content' );
 		$actual_src = $this->get_src_from_html( $the_content );
 
 		$this->assertContains( $actual_src, $valid_urls, 'The resized image is expected to be ' . implode( ' or ', $valid_urls ) );
