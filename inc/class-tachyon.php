@@ -148,8 +148,9 @@ class Tachyon {
 				// Default to resize, though fit may be used in certain cases where a dimension cannot be ascertained
 				$transform = 'resize';
 
-				// Start with a clean attachment ID each time
+				// Start with a clean size and attachment ID each time.
 				$attachment_id = false;
+				unset( $size );
 
 				// Flag if we need to munge a fullsize URL
 				$fullsize_url = false;
