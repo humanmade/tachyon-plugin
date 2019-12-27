@@ -519,7 +519,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 			],
 			[
 				'tachyon-large',
-				'<p><img class="alignnone wp-image-%%ID%% size-full" src="%%BASE_URL%%/tachyon-large-scaled.jpg" alt="" width="1280" height="719" /></p>',
+				'<p><img class="alignnone wp-image-%%ID%% size-full" src="%%BASE_URL%%/tachyon-large-scaled.jpg" alt="" width="2560" height="1440" /></p>',
 				[
 					'http://tachy.on/u/tachyon-large-scaled.jpg?fit=2560,1440',
 					'http://tachy.on/u/tachyon-large-scaled.jpg?resize=2560,1440',
