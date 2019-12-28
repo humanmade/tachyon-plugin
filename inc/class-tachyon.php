@@ -585,13 +585,10 @@ class Tachyon {
 				$tachyon_args = apply_filters( 'tachyon_image_downsize_string', $tachyon_args, compact( 'image_args', 'image_url', 'attachment_id', 'size', 'transform' ) );
 
 				// Generate Tachyon URL.
-				// We want the width / height params to match the dimensions of the image,
-				// not the resize dimensions. The Resize dimensions might be "Max width" /
-				// "Max-height" dimensions, rather than absolute image size.
 				$image = array(
 					tachyon_url( $image_url, $tachyon_args ),
-					$image_args['width'],
-					$image_args['height'],
+					! empty( $image_args['width'] ) ? $image_args['width'] : false,
+					! empty( $image_args['height'] ) ? $image_args['height'] : false,
 					$is_intermediate,
 				);
 			} elseif ( is_array( $size ) ) {
