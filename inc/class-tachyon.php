@@ -192,21 +192,27 @@ class Tachyon {
 					if ( preg_match( '#height=["|\']?([\d%]+)["|\']?#i', $images['img_tag'][ $index ], $height_string ) )
 						$height = $height_string[1];
 
+					// If image tag lacks width or height arguments, try to determine from strings WP appends to resized image filenames.
+					if ( ! $width || ! $height ) {
+						$size_from_file = static::parse_dimensions_from_filename( $src );
+						$width = $width ?: $size_from_file[0];
+						$height = $height ?: $size_from_file[1];
+					}
+
 					// Can't pass both a relative width and height, so unset the height in favor of not breaking the horizontal layout.
 					if ( false !== strpos( $width, '%' ) && false !== strpos( $height, '%' ) )
 						$width = $height = false;
 
 					// Detect WP registered image size from HTML class
-					if ( preg_match( '#class=["|\']?[^"\']*size-([^"\'\s]+)[^"\']*["|\']?#i', $images['img_tag'][ $index ], $size ) ) {
-						$size = array_pop( $size );
+					if ( preg_match( '#class=["|\']?[^"\']*size-([^"\'\s]+)[^"\']*["|\']?#i', $images['img_tag'][ $index ], $matches ) ) {
+						$size = array_pop( $matches );
 
-						if ( false === $width && false === $height && 'full' != $size && array_key_exists( $size, $image_sizes ) ) {
-							$width = (int) $image_sizes[ $size ]['width'];
-							$height = (int) $image_sizes[ $size ]['height'];
+						if ( false === $width && false === $height && isset( $size ) && array_key_exists( $size, $image_sizes ) ) {
+							$size_from_wp = wp_get_attachment_image_src( $attachment_id, $size );
+							$width = $size_from_wp[1];
+							$height = $size_from_wp[2];
 							$transform = $image_sizes[ $size ]['crop'] ? 'resize' : 'fit';
 						}
-					} else {
-						unset( $size );
 					}
 
 					// WP Attachment ID, if uploaded to this site
@@ -252,13 +258,35 @@ class Tachyon {
 									}
 								}
 
-								if ( isset( $size ) && false === $width && false === $height && 'full' !== $size && array_key_exists( $size, $image_sizes ) ) {
+								// If we still don't have a size for the image but know the dimensions,
+								// use the attachment sources to determine the size. Tachyon modifies
+								// wp_get_attachment_image_src() to account for sizes created after upload.
+								if ( ! isset( $size ) && $width && $height ) {
+									$sizes = array_keys( $image_sizes );
+									foreach ( $sizes as $size ) {
+										$size_per_wp = wp_get_attachment_image_src( $attachment_id, $size );
+										if ( $width == $size_per_wp[1] && $height == $size_per_wp[2] ) {
+											$transform = $image_sizes[ $size ]['crop'] ? 'resize' : 'fit';
+											break;
+										}
+										unset( $size ); // Prevent loop from polluting $size if it's incorrect.
+									}
+								}
+
+								if ( isset( $size ) && false === $width && false === $height && array_key_exists( $size, $image_sizes ) ) {
 									$width = (int) $image_sizes[ $size ]['width'];
 									$height = (int) $image_sizes[ $size ]['height'];
 									$transform = $image_sizes[ $size ]['crop'] ? 'resize' : 'fit';
 								}
 
-								$src_per_wp = wp_get_attachment_image_src( $attachment_id, isset( $size ) ? $size : 'full' );
+								/*
+								 * If size is still not set the dimensions were not provided by either
+								 * a class or by parsing the URL. Only the full sized image should return
+								 * no dimensions when returning the URL so it's safe to assume the $size is full.
+								 */
+								$size = isset( $size ) ? $size : 'full';
+
+								$src_per_wp = wp_get_attachment_image_src( $attachment_id, $size );
 
 								if ( self::validate_image_url( $src_per_wp[0] ) ) {
 									$src = $src_per_wp[0];
@@ -284,11 +312,6 @@ class Tachyon {
 								unset( $attachment );
 							}
 						}
-					}
-
-					// If image tag lacks width and height arguments, try to determine from strings WP appends to resized image filenames.
-					if ( false === $width && false === $height ) {
-						list( $width, $height ) = static::parse_dimensions_from_filename( $src );
 					}
 
 					// If width is available, constrain to $content_width
