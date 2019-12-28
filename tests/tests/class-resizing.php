@@ -701,6 +701,14 @@ class Tests_Resizing extends WP_UnitTestCase {
 					'http://tachy.on/u/tachyon-large-scaled.jpg?w=1778&h=1000',
 				],
 			],
+			// Unknown attachement ID, unknown size, classic editor formatted image tags.
+			[
+				'tachyon',
+				'<p><img class="alignnone" src="%%BASE_URL%%/tachyon-150x150.jpg" alt="" width="150" height="150" /></p>',
+				[
+					'http://tachy.on/u/tachyon.jpg?resize=150,150',
+				],
+			],
 		];
 	}
 }

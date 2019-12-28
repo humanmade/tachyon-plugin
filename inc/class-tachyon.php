@@ -367,6 +367,31 @@ class Tachyon {
 						$args['h'] = $height;
 					}
 
+					// Final logic check to determine the size for an unknown attachment ID.
+					if ( ! isset( $size ) ) {
+						if ( $width ) {
+							$filter['width'] = $width;
+						}
+						if ( $height ) {
+							$filter['height'] = $height;
+						}
+
+						if ( ! empty( $filter ) ) {
+							$sizes = wp_list_filter( $image_sizes, $filter );
+							if ( empty( $sizes ) ) {
+								$sizes = wp_list_filter( $image_sizes, $filter, 'OR' );
+							}
+							if ( ! empty( $sizes ) ) {
+								$size = reset( $sizes );
+							}
+						}
+					}
+
+					if ( ! isset( $size ) ) {
+						// Custom size, send an array.
+						$size = [ $width, $height ];
+					}
+
 					/**
 					 * Filter the array of Tachyon arguments added to an image when it goes through Tachyon.
 					 * By default, only includes width and height values.
