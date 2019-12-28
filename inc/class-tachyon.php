@@ -284,7 +284,14 @@ class Tachyon {
 								 * a class or by parsing the URL. Only the full sized image should return
 								 * no dimensions when returning the URL so it's safe to assume the $size is full.
 								 */
-								$size = isset( $size ) ? $size : 'full';
+								if ( ! isset( $size ) ) {
+									$size = 'full';
+									$width = $meta['width'];
+									$height = $meta['height'];
+								}
+								if ( function_exists( 'wp_get_original_image_url' ) ) {
+									$src = wp_get_original_image_url( $attachment_id );
+								}
 
 								$src_per_wp = wp_get_attachment_image_src( $attachment_id, $size );
 
@@ -526,7 +533,7 @@ class Tachyon {
 		}
 
 		// Get the image URL and proceed with Tachyon-ification if successful
-		$image_url = wp_get_attachment_url( $attachment_id );
+		$image_url = function_exists( 'wp_get_original_image_url' ) ? wp_get_original_image_url( $attachment_id ) : wp_get_attachment_url( $attachment_id );
 		$full_size_meta = wp_get_attachment_metadata( $attachment_id );
 		$is_intermediate = false;
 
