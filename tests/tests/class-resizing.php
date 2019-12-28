@@ -1,6 +1,7 @@
 <?php
 namespace HM\Tachyon\Tests;
 
+use Tachyon;
 use WP_UnitTestCase;
 
 /**
@@ -430,13 +431,8 @@ class Tests_Resizing extends WP_UnitTestCase {
 		$attachment_id = self::$attachment_ids[ $file ];
 		$content = str_replace( '%%ID%%', $attachment_id, $content );
 		$content = str_replace( '%%BASE_URL%%', wp_upload_dir()['baseurl'], $content );
-		$post_id = $this->factory()->post->create( [
-			'post_content' => $content,
-		] );
-		$this->go_to( get_permalink( $post_id ) );
-		the_post();
 
-		$the_content = \Tachyon::filter_the_content( $content ); // get_echo( 'the_content' );
+		$the_content = Tachyon::filter_the_content( $content );
 		$actual_src = $this->get_src_from_html( $the_content );
 
 		$this->assertContains( $actual_src, $valid_urls, 'The resized image is expected to be ' . implode( ' or ', $valid_urls ) );
