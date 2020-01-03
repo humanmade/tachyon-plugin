@@ -5,9 +5,9 @@ use Tachyon;
 use WP_UnitTestCase;
 
 /**
- * Test rescheduling an event is successful.
+ * Ensure the tachyon plugin resizes correctly.
  *
- * @ticket 64
+ * @ticket 48
  */
 class Tests_Resizing extends WP_UnitTestCase {
 
