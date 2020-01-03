@@ -27,17 +27,6 @@ class Tests_Resizing extends WP_UnitTestCase {
 	static public function wpSetUpBeforeClass( $factory ) {
 		self::setup_custom_sizes();
 
-		/**
-		 * Filter the uploads directory to avoid file name clashes in
-		 * subsequent tests.
-		 */
-		add_filter( 'upload_dir', function( $upload_dir ) {
-			$dir = strtolower( str_replace( [ '_', '/', '\\' ], '-', __CLASS__ ) );
-			$upload_dir['basedir'] = preg_replace( '#/uploads(/|$)#', "/uploads/{$dir}\$1", $upload_dir['basedir'] );
-			$upload_dir['path'] = preg_replace( '#/uploads(/|$)#', "/uploads/{$dir}\$1", $upload_dir['path'] );
-			return $upload_dir;
-		} );
-
 		self::$attachment_ids['tachyon'] = $factory->attachment->create_upload_object(
 			realpath( __DIR__ . '/../data/tachyon.jpg')
 		);
@@ -49,11 +38,21 @@ class Tests_Resizing extends WP_UnitTestCase {
 
 	/**
 	 * Runs the routine after all tests have been run.
+	 *
+	 * This deletes the files from the uploads directory
+	 * to account for the test suite returning the posts
+	 * table to the original state.
 	 */
-	public static function tearDownAfterClass() {
-		array_map( function( $post_id ) {
-			wp_delete_attachment( $post_id, true );
-		}, self::$attachment_ids );
+	public static function wpTearDownAfterClass() {
+		$uploads_dir = wp_upload_dir()['basedir'];
+
+		$files = glob( $uploads_dir . '/*' );
+		array_walk( $files, function ( $file ) {
+			if ( is_file( $file ) ) {
+				unlink($file);
+			}
+		} );
+		rmdir( $uploads_dir );
 	}
 
 	function setUp() {

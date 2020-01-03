@@ -25,6 +25,17 @@ define( 'TACHYON_URL', 'http://tachy.on/u' );
 // Prevent upload URLs being affected by the date on which tests run.
 tests_add_filter( 'pre_option_uploads_use_yearmonth_folders', '__return_zero' );
 
+/**
+ * Filter the uploads directory to avoid file name clashes in
+ * subsequent tests.
+ */
+tests_add_filter( 'upload_dir', function( $upload_dir ) {
+	$dir = 'tachyon-test-suite';
+	$upload_dir['basedir'] = preg_replace( '#/uploads(/|$)#', "/uploads/{$dir}\$1", $upload_dir['basedir'] );
+	$upload_dir['path'] = preg_replace( '#/uploads(/|$)#', "/uploads/{$dir}\$1", $upload_dir['path'] );
+	return $upload_dir;
+} );
+
 // Load Tachyon.
 tests_add_filter( 'muplugins_loaded', function() {
 	require_once dirname( __DIR__ ) . '/tachyon.php';
