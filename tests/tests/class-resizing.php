@@ -396,28 +396,19 @@ class Tests_Resizing extends WP_UnitTestCase {
 	/**
 	 * Extract the first src attribute from the given HTML.
 	 *
-	 * There should only ever be one image in the content so regex
-	 * can be dropped in favour of strpos techniques for getting the
-	 * src of an image.
+	 * There should only ever be one image in the content so the regex
+	 * can be simplified to search for the source attribute only.
 	 *
 	 * @param $html string HTML containing an image tag.
 	 * @return string The first `src` attribute within the first image tag.
 	 */
 	function get_src_from_html( $html ) {
-		if (
-			strpos( $html, '<img' ) === false ||
-			strpos( $html, '>' ) === false ||
-			strpos( $html, 'src=' ) === false ||
-			strpos( $html, '"' ) === false
-		) {
+		preg_match_all( '/src\s*=\s*[\'"]([^\'"]+)[\g1]/i' , $html, $matches, PREG_SET_ORDER );
+		if ( empty( $matches[0][1] ) ) {
 			return false;
 		}
 
-		$html = substr( $html, strpos( $html, '<img' ) );
-		$html = substr( $html, 0, strpos( $html, '>' ) + 1 );
-		$html = substr( $html, strpos( $html, 'src="' ) + 5 );
-		$html = substr( $html, 0, strpos( $html, '"' ) );
-		return $html;
+		return $matches[0][1];
 	}
 
 	/**
