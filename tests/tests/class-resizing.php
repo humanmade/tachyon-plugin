@@ -403,7 +403,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 	 * @return string The first `src` attribute within the first image tag.
 	 */
 	function get_src_from_html( $html ) {
-		preg_match_all( '/src\s*=\s*[\'"]([^\'"]+)[\g1]/i' , $html, $matches, PREG_SET_ORDER );
+		preg_match_all( '/src\s*=\s*[\'"]([^\'"]+)[\'"]/i' , $html, $matches, PREG_SET_ORDER );
 		if ( empty( $matches[0][1] ) ) {
 			return false;
 		}
