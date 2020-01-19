@@ -57,11 +57,11 @@ class Tests_Resizing extends WP_UnitTestCase {
 		$_wp_additional_image_sizes = self::$wp_additional_image_sizes;
 
 		$singleton = Tachyon::instance(); // Get Tachyon instance.
-		$reflection = new ReflectionClass($singleton);
-		$instance = $reflection->getProperty('image_sizes');
-		$instance->setAccessible(true); // Allow modification of image sizes.
-		$instance->setValue(null, null); // Reset image sizes for next tests.
-		$instance->setAccessible(false); // clean up.
+		$reflection = new ReflectionClass( $singleton );
+		$instance = $reflection->getProperty( 'image_sizes' );
+		$instance->setAccessible( true ); // Allow modification of image sizes.
+		$instance->setValue( null, null ); // Reset image sizes for next tests.
+		$instance->setAccessible( false ); // clean up.
 
 		$uploads_dir = wp_upload_dir()['basedir'];
 
