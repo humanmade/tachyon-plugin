@@ -1,6 +1,7 @@
 <?php
 namespace HM\Tachyon\Tests;
 
+use ReflectionClass;
 use Tachyon;
 use WP_UnitTestCase;
 
@@ -17,6 +18,11 @@ class Tests_Linking extends WP_UnitTestCase {
 	static $attachment_ids;
 
 	/**
+	 * @var array[] Original array of image sizes.
+	 */
+	static $wp_additional_image_sizes;
+
+	/**
 	 * Set up attachments and posts require for testing.
 	 *
 	 * tachyon.jpg: 1280x719
@@ -25,6 +31,9 @@ class Tests_Linking extends WP_UnitTestCase {
 	 * @link https://www.pexels.com/photo/0-7-rpm-171195/
 	 */
 	static public function wpSetUpBeforeClass( $factory ) {
+		global $_wp_additional_image_sizes;
+		self::$wp_additional_image_sizes = $_wp_additional_image_sizes;
+
 		self::$attachment_ids['tachyon'] = $factory->attachment->create_upload_object(
 			realpath( __DIR__ . '/../data/tachyon.jpg')
 		);
@@ -38,6 +47,16 @@ class Tests_Linking extends WP_UnitTestCase {
 	 * table to the original state.
 	 */
 	public static function wpTearDownAfterClass() {
+		global $_wp_additional_image_sizes;
+		$_wp_additional_image_sizes = self::$wp_additional_image_sizes;
+
+		$singleton = Tachyon::instance(); // Get Tachyon instance.
+		$reflection = new ReflectionClass($singleton);
+		$instance = $reflection->getProperty('image_sizes');
+		$instance->setAccessible(true); // Allow modification of image sizes.
+		$instance->setValue(null, null); // Reset image sizes for next tests.
+		$instance->setAccessible(false); // clean up.
+
 		$uploads_dir = wp_upload_dir()['basedir'];
 
 		$files = glob( $uploads_dir . '/*' );
