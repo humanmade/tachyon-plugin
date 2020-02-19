@@ -148,8 +148,9 @@ class Tachyon {
 				// Default to resize, though fit may be used in certain cases where a dimension cannot be ascertained
 				$transform = 'resize';
 
-				// Start with a clean attachment ID each time
+				// Start with a clean size and attachment ID each time.
 				$attachment_id = false;
+				unset( $size );
 
 				// Flag if we need to munge a fullsize URL
 				$fullsize_url = false;
@@ -191,21 +192,27 @@ class Tachyon {
 					if ( preg_match( '#height=["|\']?([\d%]+)["|\']?#i', $images['img_tag'][ $index ], $height_string ) )
 						$height = $height_string[1];
 
+					// If image tag lacks width or height arguments, try to determine from strings WP appends to resized image filenames.
+					if ( ! $width || ! $height ) {
+						$size_from_file = static::parse_dimensions_from_filename( $src );
+						$width = $width ?: $size_from_file[0];
+						$height = $height ?: $size_from_file[1];
+					}
+
 					// Can't pass both a relative width and height, so unset the height in favor of not breaking the horizontal layout.
 					if ( false !== strpos( $width, '%' ) && false !== strpos( $height, '%' ) )
 						$width = $height = false;
 
 					// Detect WP registered image size from HTML class
-					if ( preg_match( '#class=["|\']?[^"\']*size-([^"\'\s]+)[^"\']*["|\']?#i', $images['img_tag'][ $index ], $size ) ) {
-						$size = array_pop( $size );
+					if ( preg_match( '#class=["|\']?[^"\']*size-([^"\'\s]+)[^"\']*["|\']?#i', $images['img_tag'][ $index ], $matches ) ) {
+						$size = array_pop( $matches );
 
-						if ( false === $width && false === $height && 'full' != $size && array_key_exists( $size, $image_sizes ) ) {
-							$width = (int) $image_sizes[ $size ]['width'];
-							$height = (int) $image_sizes[ $size ]['height'];
+						if ( false === $width && false === $height && isset( $size ) && array_key_exists( $size, $image_sizes ) ) {
+							$size_from_wp = wp_get_attachment_image_src( $attachment_id, $size );
+							$width = $size_from_wp[1];
+							$height = $size_from_wp[2];
 							$transform = $image_sizes[ $size ]['crop'] ? 'resize' : 'fit';
 						}
-					} else {
-						unset( $size );
 					}
 
 					// WP Attachment ID, if uploaded to this site
@@ -251,13 +258,35 @@ class Tachyon {
 									}
 								}
 
-								if ( isset( $size ) && false === $width && false === $height && 'full' !== $size && array_key_exists( $size, $image_sizes ) ) {
+								// If we still don't have a size for the image but know the dimensions,
+								// use the attachment sources to determine the size. Tachyon modifies
+								// wp_get_attachment_image_src() to account for sizes created after upload.
+								if ( ! isset( $size ) && $width && $height ) {
+									$sizes = array_keys( $image_sizes );
+									foreach ( $sizes as $size ) {
+										$size_per_wp = wp_get_attachment_image_src( $attachment_id, $size );
+										if ( $width == $size_per_wp[1] && $height == $size_per_wp[2] ) {
+											$transform = $image_sizes[ $size ]['crop'] ? 'resize' : 'fit';
+											break;
+										}
+										unset( $size ); // Prevent loop from polluting $size if it's incorrect.
+									}
+								}
+
+								if ( isset( $size ) && false === $width && false === $height && array_key_exists( $size, $image_sizes ) ) {
 									$width = (int) $image_sizes[ $size ]['width'];
 									$height = (int) $image_sizes[ $size ]['height'];
 									$transform = $image_sizes[ $size ]['crop'] ? 'resize' : 'fit';
 								}
 
-								$src_per_wp = wp_get_attachment_image_src( $attachment_id, isset( $size ) ? $size : 'full' );
+								/*
+								 * If size is still not set the dimensions were not provided by either
+								 * a class or by parsing the URL. Only the full sized image should return
+								 * no dimensions when returning the URL so it's safe to assume the $size is full.
+								 */
+								$size = isset( $size ) ? $size : 'full';
+
+								$src_per_wp = wp_get_attachment_image_src( $attachment_id, $size );
 
 								if ( self::validate_image_url( $src_per_wp[0] ) ) {
 									$src = $src_per_wp[0];
@@ -283,11 +312,6 @@ class Tachyon {
 								unset( $attachment );
 							}
 						}
-					}
-
-					// If image tag lacks width and height arguments, try to determine from strings WP appends to resized image filenames.
-					if ( false === $width && false === $height ) {
-						list( $width, $height ) = static::parse_dimensions_from_filename( $src );
 					}
 
 					// If width is available, constrain to $content_width
@@ -341,6 +365,31 @@ class Tachyon {
 						$args['w'] = $width;
 					} elseif ( false !== $height ) {
 						$args['h'] = $height;
+					}
+
+					// Final logic check to determine the size for an unknown attachment ID.
+					if ( ! isset( $size ) ) {
+						if ( $width ) {
+							$filter['width'] = $width;
+						}
+						if ( $height ) {
+							$filter['height'] = $height;
+						}
+
+						if ( ! empty( $filter ) ) {
+							$sizes = wp_list_filter( $image_sizes, $filter );
+							if ( empty( $sizes ) ) {
+								$sizes = wp_list_filter( $image_sizes, $filter, 'OR' );
+							}
+							if ( ! empty( $sizes ) ) {
+								$size = reset( $sizes );
+							}
+						}
+					}
+
+					if ( ! isset( $size ) ) {
+						// Custom size, send an array.
+						$size = [ $width, $height ];
 					}
 
 					/**
@@ -478,6 +527,7 @@ class Tachyon {
 
 		// Get the image URL and proceed with Tachyon-ification if successful
 		$image_url = wp_get_attachment_url( $attachment_id );
+		$full_size_meta = wp_get_attachment_metadata( $attachment_id );
 		$is_intermediate = false;
 
 		if ( $image_url ) {
@@ -496,11 +546,11 @@ class Tachyon {
 
 				// 'full' is a special case: We need consistent data regardless of the requested size.
 				if ( 'full' == $size ) {
-					$image_meta = wp_get_attachment_metadata( $attachment_id );
+					$image_meta = $full_size_meta;
 				} elseif ( ! $image_meta ) {
 					// If we still don't have any image meta at this point, it's probably from a custom thumbnail size
 					// for an image that was uploaded before the custom image was added to the theme.  Try to determine the size manually.
-					$image_meta = wp_get_attachment_metadata( $attachment_id );
+					$image_meta = $full_size_meta;
 					if ( isset( $image_meta['width'] ) && isset( $image_meta['height'] ) ) {
 						$image_resized = image_resize_dimensions( $image_meta['width'], $image_meta['height'], $image_args['width'], $image_args['height'], $image_args['crop'] );
 						if ( $image_resized ) { // This could be false when the requested image size is larger than the full-size image.
@@ -541,22 +591,16 @@ class Tachyon {
 						$tachyon_args['w'] = $image_args['width'];
 					}
 				} else {
-					if ( ( 'resize' === $transform ) && $image_meta = wp_get_attachment_metadata( $attachment_id ) ) {
-						// Lets make sure that we don't upscale images since wp never upscales them as well
-						$smaller_width  = ( ( $image_meta['width']  < $image_args['width']  ) ? $image_meta['width']  : $image_args['width']  );
-						$smaller_height = ( ( $image_meta['height'] < $image_args['height'] ) ? $image_meta['height'] : $image_args['height'] );
-						
-						// Reset $image_meta dimensions to resized values.
-						$image_meta['width']  = $smaller_width;
-						$image_meta['height'] = $smaller_height;
-
-						$tachyon_args[ $transform ] = $smaller_width . ',' . $smaller_height;
-						$is_intermediate = true;
-					} else {
-						$tachyon_args[ $transform ] = $image_args['width'] . ',' . $image_args['height'];
+					if ( 'resize' === $transform || ! $image_meta ) {
+						$image_meta = $full_size_meta;
 					}
 
-					if ( 'resize' === $transform && is_array( $image_args['crop'] ) ) {
+					$image_args['width'] = min( (int) $image_args['width'], (int) $image_meta['width'] );
+					$image_args['height'] = min( (int) $image_args['height'], (int) $image_meta['height'] );
+					$tachyon_args[ $transform ] = $image_args['width'] . ',' . $image_args['height'];
+					$is_intermediate = ( $image_args['width'] < $full_size_meta['width'] || $image_args['height'] < $full_size_meta['height'] );
+
+					if ( $is_intermediate && 'resize' === $transform && is_array( $image_args['crop'] ) ) {
 						$tachyon_args['gravity'] = implode( '', array_map( function ( $v ) {
 							$map = [
 								'top' => 'north',
@@ -589,13 +633,10 @@ class Tachyon {
 				$tachyon_args = apply_filters( 'tachyon_image_downsize_string', $tachyon_args, compact( 'image_args', 'image_url', 'attachment_id', 'size', 'transform' ) );
 
 				// Generate Tachyon URL.
-				// We want the width / height params to match the dimensions of the image,
-				// not the resize dimensions. The Resize dimensions might be "Max width" /
-				// "Max-height" dimensions, rather than absolute image size.
 				$image = array(
 					tachyon_url( $image_url, $tachyon_args ),
-					isset( $image_meta['width'] ) ? $image_meta['width'] : $image_args['width'],
-					isset( $image_meta['height'] ) ? $image_meta['height'] : $image_args['height'],
+					! empty( $image_args['width'] ) ? $image_args['width'] : false,
+					! empty( $image_args['height'] ) ? $image_args['height'] : false,
 					$is_intermediate,
 				);
 			} elseif ( is_array( $size ) ) {
