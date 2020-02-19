@@ -670,11 +670,11 @@ class Tachyon {
 
 				list( $width, $height ) = image_constrain_size_for_editor( $width, $height, $size );
 
+				$tachyon_args = array();
+
 				// Expose arguments to a filter before passing to Tachyon
 				if ( $is_intermediate ) {
-					$tachyon_args = array(
-						'fit' => $width . ',' . $height
-					);
+					$tachyon_args['fit'] = $width . ',' . $height;
 				}
 
 				/**
