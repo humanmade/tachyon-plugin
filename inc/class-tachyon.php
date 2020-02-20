@@ -217,7 +217,7 @@ class Tachyon {
 
 					// WP Attachment ID, if uploaded to this site
 					if (
-						preg_match( '#class=["|\']?[^"\']*wp-image-([\d]+)[^"\']*["|\']?#i', $images['img_tag'][ $index ], $attachment_id ) &&
+						preg_match( '#class=["|\']?[^"\']*wp-image-([\d]+)[^"\']*["|\']?#i', $images['img_tag'][ $index ], $class_attachment_id ) &&
 						(
 							0 === strpos( $src, $upload_dir['baseurl'] ) ||
 							/**
@@ -238,12 +238,13 @@ class Tachyon {
 							apply_filters( 'tachyon_image_is_local', false, compact( 'src', 'tag', 'images', 'index' ) )
 						)
 					) {
-						$attachment_id = intval( array_pop( $attachment_id ) );
+						$class_attachment_id = intval( array_pop( $class_attachment_id ) );
 
-						if ( $attachment_id ) {
-							$attachment = get_post( $attachment_id );
+						if ( $class_attachment_id ) {
+							$attachment = get_post( $class_attachment_id );
 							// Basic check on returned post object
 							if ( is_object( $attachment ) && ! is_wp_error( $attachment ) && 'attachment' == $attachment->post_type ) {
+								$attachment_id = $attachment->ID;
 
 								// If we still don't have a size for the image, use the attachment_id
 								// to lookup the size for the image in the URL.
