@@ -346,10 +346,12 @@ class Tachyon {
 					$args = array();
 
 					if ( false !== $width && false !== $height && false === strpos( $width, '%' ) && false === strpos( $height, '%' ) ) {
-						$args[ $transform ] = $width . ',' . $height;
-						// Set the gravity from the registered image size.
+						if ( ! isset( $size ) || $size !== 'full' ) {
+							$args[ $transform ] = $width . ',' . $height;
+						}
 
-						if ( 'resize' === $transform && isset( $size ) && array_key_exists( $size, $image_sizes ) && is_array( $image_sizes[ $size ]['crop'] ) ) {
+						// Set the gravity from the registered image size.
+						if ( 'resize' === $transform && isset( $size ) && $size !== 'full' && array_key_exists( $size, $image_sizes ) && is_array( $image_sizes[ $size ]['crop'] ) ) {
 							$args['gravity'] = implode( '', array_map( function ( $v ) {
 								$map = [
 									'top' => 'north',
@@ -597,8 +599,12 @@ class Tachyon {
 
 					$image_args['width'] = min( (int) $image_args['width'], (int) $image_meta['width'] );
 					$image_args['height'] = min( (int) $image_args['height'], (int) $image_meta['height'] );
-					$tachyon_args[ $transform ] = $image_args['width'] . ',' . $image_args['height'];
 					$is_intermediate = ( $image_args['width'] < $full_size_meta['width'] || $image_args['height'] < $full_size_meta['height'] );
+
+					// Add transform args if size is intermediate.
+					if ( $is_intermediate ) {
+						$tachyon_args[ $transform ] = $image_args['width'] . ',' . $image_args['height'];
+					}
 
 					if ( $is_intermediate && 'resize' === $transform && is_array( $image_args['crop'] ) ) {
 						$tachyon_args['gravity'] = implode( '', array_map( function ( $v ) {
@@ -664,10 +670,12 @@ class Tachyon {
 
 				list( $width, $height ) = image_constrain_size_for_editor( $width, $height, $size );
 
+				$tachyon_args = array();
+
 				// Expose arguments to a filter before passing to Tachyon
-				$tachyon_args = array(
-					'fit' => $width . ',' . $height
-				);
+				if ( $is_intermediate ) {
+					$tachyon_args['fit'] = $width . ',' . $height;
+				}
 
 				/**
 				 * Filter the Tachyon Arguments added to an image when going through Tachyon,
