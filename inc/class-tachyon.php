@@ -598,12 +598,9 @@ class Tachyon {
 						$tachyon_args['w'] = $image_args['width'];
 					}
 				} else {
-
-					// if fit
-					// image args should be as original size definition restricted by max size
-
+					// Fit accepts a zero value for either dimension so we allow that.
 					// If resizing:
-					// Both width & height required, image args should be exact dimensions.
+					// Both width & height are required, image args should be exact dimensions.
 					if ( $transform === 'resize' ) {
 						$image_args['width'] = $image_args['width'] ?: $width;
 						$image_args['height'] = $image_args['height'] ?: $height;
