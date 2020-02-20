@@ -349,6 +349,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 				'large',
 				[
 					'http://tachy.on/u/tachyon-large-scaled.jpg?fit=1024,576',
+					'http://tachy.on/u/tachyon-large-scaled.jpg?fit=1024,719',
 					'http://tachy.on/u/tachyon-large-scaled.jpg?resize=1024,576',
 					'http://tachy.on/u/tachyon-large-scaled.jpg?fit=1024,1024',
 					'http://tachy.on/u/tachyon-large-scaled.jpg?w=1024&h=576',
@@ -371,6 +372,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 				'tachyon-large',
 				'oversize2d-early',
 				[
+					'http://tachy.on/u/tachyon-large-scaled.jpg?fit=2500,1440',
 					'http://tachy.on/u/tachyon-large-scaled.jpg?fit=2500,1406',
 					'http://tachy.on/u/tachyon-large-scaled.jpg?resize=2500,1406',
 					'http://tachy.on/u/tachyon-large-scaled.jpg?fit=2500,1500',
