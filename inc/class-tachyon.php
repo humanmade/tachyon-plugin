@@ -548,7 +548,7 @@ class Tachyon {
 				$image_meta = image_get_intermediate_size( $attachment_id, $size );
 
 				// 'full' is a special case: We need consistent data regardless of the requested size.
-				if ( 'full' == $size ) {
+				if ( 'full' === $size ) {
 					$image_meta = $full_size_meta;
 				} elseif ( ! $image_meta ) {
 					// If we still don't have any image meta at this point, it's probably from a custom thumbnail size
@@ -566,6 +566,9 @@ class Tachyon {
 					$is_intermediate = true;
 				}
 
+				// Expose determined arguments to a filter before passing to Tachyon
+				$transform = $image_args['crop'] ? 'resize' : 'fit';
+
 				// If we can't get the width from the image size args, use the width of the
 				// image metadata. We only do this is image_args['width'] is not set, because
 				// we don't want to lose this data. $image_args is used as the Tachyon URL param
@@ -573,33 +576,37 @@ class Tachyon {
 				// size is 300x300px, non-cropped, we want to pass `fit=300,300` to Tachyon, instead
 				// of say `resize=300,225`, because semantically, the image size is registered as
 				// 300x300 un-cropped, not 300x225 cropped.
-				if ( empty( $image_args['width'] ) ) {
+				if ( empty( $image_args['width'] ) && $transform !== 'resize' ) {
 					$image_args['width'] = isset( $image_meta['width'] ) ? $image_meta['width'] : 0;
 				}
 
-				if ( empty( $image_args['height'] ) ) {
+				if ( empty( $image_args['height'] ) && $transform !== 'resize' ) {
 					$image_args['height'] = isset( $image_meta['height'] ) ? $image_meta['height'] : 0;
 				}
 
-				list( $image_args['width'], $image_args['height'] ) = image_constrain_size_for_editor( $image_args['width'], $image_args['height'], $size, 'display' );
+				// Prevent upscaling.
+				$image_args['width'] = min( (int) $image_args['width'], (int) $full_size_meta['width'] );
+				$image_args['height'] = min( (int) $image_args['height'], (int) $full_size_meta['height'] );
 
-				// Expose determined arguments to a filter before passing to Tachyon
-				$transform = $image_args['crop'] ? 'resize' : 'fit';
+				// Respect $content_width settings.
+				list( $width, $height ) = image_constrain_size_for_editor( $image_meta['width'], $image_meta['height'], $size, 'display' );
 
 				// Check specified image dimensions and account for possible zero values; tachyon fails to resize if a dimension is zero.
-				if ( 0 == $image_args['width'] || 0 == $image_args['height'] ) {
+				if ( ( 0 == $image_args['width'] || 0 == $image_args['height'] ) && $transform !== 'fit' ) {
 					if ( 0 == $image_args['width'] && 0 < $image_args['height'] ) {
 						$tachyon_args['h'] = $image_args['height'];
 					} elseif ( 0 == $image_args['height'] && 0 < $image_args['width'] ) {
 						$tachyon_args['w'] = $image_args['width'];
 					}
 				} else {
-					if ( 'resize' === $transform || ! $image_meta ) {
-						$image_meta = $full_size_meta;
+					// Fit accepts a zero value for either dimension so we allow that.
+					// If resizing:
+					// Both width & height are required, image args should be exact dimensions.
+					if ( $transform === 'resize' ) {
+						$image_args['width'] = $image_args['width'] ?: $width;
+						$image_args['height'] = $image_args['height'] ?: $height;
 					}
 
-					$image_args['width'] = min( (int) $image_args['width'], (int) $image_meta['width'] );
-					$image_args['height'] = min( (int) $image_args['height'], (int) $image_meta['height'] );
 					$is_intermediate = ( $image_args['width'] < $full_size_meta['width'] || $image_args['height'] < $full_size_meta['height'] );
 
 					// Add transform args if size is intermediate.
@@ -642,8 +649,8 @@ class Tachyon {
 				// Generate Tachyon URL.
 				$image = array(
 					tachyon_url( $image_url, $tachyon_args ),
-					! empty( $image_args['width'] ) ? $image_args['width'] : false,
-					! empty( $image_args['height'] ) ? $image_args['height'] : false,
+					$width,
+					$height,
 					$is_intermediate,
 				);
 			} elseif ( is_array( $size ) ) {
