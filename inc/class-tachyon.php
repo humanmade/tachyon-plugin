@@ -786,13 +786,14 @@ class Tachyon {
 
 	/**
 	 * Ensure image URL is valid for Tachyon.
+	 *
 	 * Though Tachyon functions address some of the URL issues, we should avoid unnecessary processing if we know early on that the image isn't supported.
 	 *
 	 * @param string $url
 	 * @uses wp_parse_args
 	 * @return bool
 	 */
-	protected static function validate_image_url( $url ) {
+	public static function validate_image_url( $url ) {
 		$parsed_url = @parse_url( $url );
 
 		if ( ! $parsed_url ) {
