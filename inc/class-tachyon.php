@@ -112,6 +112,24 @@ class Tachyon {
 	}
 
 	/**
+	 * Get an attachment post ID by GUID.
+	 *
+	 * @param string $src The attachment source.
+	 * @return int|false
+	 */
+	public static function get_attachment_by_guid( $src ) {
+		global $wpdb;
+
+		// Trim the host name portion of the source as this could potentially have changed.
+		$src_path = wp_parse_url( $src, PHP_URL_PATH );
+
+		// Try to fetch the post ID by GUID.
+		$id = $wpdb->get_var( $wpdb->prepare( "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'attachment' AND guid LIKE '%%%s' LIMIT 1;", $src_path ) );
+
+		return $id ?? false;
+	}
+
+	/**
 	 * Identify images in post content, and if images are local (uploaded to the current site), pass through Tachyon.
 	 *
 	 * @param string $content
@@ -192,28 +210,29 @@ class Tachyon {
 					if ( preg_match( '#height=["|\']?([\d%]+)["|\']?#i', $images['img_tag'][ $index ], $height_string ) )
 						$height = $height_string[1];
 
+					// Detect WP registered image size from HTML class
+					if ( preg_match( '#class=["|\']?[^"\']*size-([^"\'\s]+)[^"\']*["|\']?#i', $images['img_tag'][ $index ], $matches ) ) {
+						$size = array_pop( $matches );
+					}
+
 					// If image tag lacks width or height arguments, try to determine from strings WP appends to resized image filenames.
-					if ( ! $width || ! $height ) {
+					if ( ! isset( $size ) && ( ! $width || ! $height ) ) {
 						$size_from_file = static::parse_dimensions_from_filename( $src );
-						$width = $width ?: $size_from_file[0];
-						$height = $height ?: $size_from_file[1];
+						// Check if this isn't a full size URL before inferring dimensions.
+						if ( $size_from_file[0] !== false && $size_from_file[1] !== false ) {
+							$attachment_id = self::get_attachment_by_guid( $src );
+							if ( $attachment_id ) {
+								$fullsize_url = true;
+							} else {
+								$width = $size_from_file[0];
+								$height = $size_from_file[1];
+							}
+						}
 					}
 
 					// Can't pass both a relative width and height, so unset the height in favor of not breaking the horizontal layout.
 					if ( false !== strpos( $width, '%' ) && false !== strpos( $height, '%' ) )
 						$width = $height = false;
-
-					// Detect WP registered image size from HTML class
-					if ( preg_match( '#class=["|\']?[^"\']*size-([^"\'\s]+)[^"\']*["|\']?#i', $images['img_tag'][ $index ], $matches ) ) {
-						$size = array_pop( $matches );
-
-						if ( false === $width && false === $height && isset( $size ) && array_key_exists( $size, $image_sizes ) ) {
-							$size_from_wp = wp_get_attachment_image_src( $attachment_id, $size );
-							$width = $size_from_wp[1];
-							$height = $size_from_wp[2];
-							$transform = $image_sizes[ $size ]['crop'] ? 'resize' : 'fit';
-						}
-					}
 
 					// WP Attachment ID, if uploaded to this site
 					if (
@@ -334,15 +353,6 @@ class Tachyon {
 							$transform = 'fit';
 					}
 
-					// Detect if image source is for a custom-cropped thumbnail and prevent further URL manipulation.
-					if ( ! $fullsize_url && preg_match_all( '#-e[a-z0-9]+(-\d+x\d+)?\.(' . implode('|', self::$extensions ) . '){1}$#i', basename( $src ), $filename ) )
-						$fullsize_url = true;
-
-					// Build URL, first maybe removing WP's resized string so we pass the original image to Tachyon
-					if ( ! $fullsize_url ) {
-						$src = self::strip_image_dimensions_maybe( $src );
-					}
-
 					// Build array of Tachyon args and expose to filter before passing to Tachyon URL function
 					$args = array();
 
@@ -393,6 +403,15 @@ class Tachyon {
 					if ( ! isset( $size ) ) {
 						// Custom size, send an array.
 						$size = [ $width, $height ];
+					}
+
+					// Detect if image source is for a custom-cropped thumbnail and prevent further URL manipulation.
+					if ( ! $fullsize_url && preg_match_all( '#-e[a-z0-9]+(-\d+x\d+)?\.(' . implode('|', self::$extensions ) . '){1}$#i', basename( $src ), $filename ) )
+						$fullsize_url = true;
+
+					// Build URL, first maybe removing WP's resized string so we pass the original image to Tachyon
+					if ( ! $fullsize_url ) {
+						$src = self::strip_image_dimensions_maybe( $src );
 					}
 
 					/**
@@ -826,6 +845,13 @@ class Tachyon {
 	 * @return string
 	 **/
 	protected static function strip_image_dimensions_maybe( $src ) {
+		// Check we can find the attachment by that name
+		$attachment_id = self::get_attachment_by_guid( $src );
+		if ( $attachment_id ) {
+			// Prevent stripping dimenions from src.
+			return $src;
+		}
+
 		// Build URL, first removing WP's resized string so we pass the original image to Tachyon
 		if ( preg_match( '#(-\d+x\d+)\.(' . implode( '|', self::$extensions ) . '){1}$#i', $src, $src_parts ) ) {
 			$src = str_replace( $src_parts[1], '', $src );

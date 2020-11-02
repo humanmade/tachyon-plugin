@@ -27,12 +27,16 @@ class Tests_Resizing extends WP_UnitTestCase {
 	 *
 	 * tachyon.jpg: 1280x719
 	 * tachyon-large.jpg: 5312x2988
+	 * tachyon-1132x687.jpg: 1280x719
 	 * Photo by Digital Buggu from Pexels
 	 * @link https://www.pexels.com/photo/0-7-rpm-171195/
 	 */
 	static public function wpSetUpBeforeClass( $factory ) {
 		global $_wp_additional_image_sizes;
 		self::$wp_additional_image_sizes = $_wp_additional_image_sizes;
+
+		// Ensure pre WP 5.3.1 behaviour with image file having dimensions in file name.
+		add_filter( 'wp_unique_filename', __NAMESPACE__ . '\\Tests_Resizing::unique_filename_override' );
 
 		self::setup_custom_sizes();
 
@@ -42,6 +46,10 @@ class Tests_Resizing extends WP_UnitTestCase {
 
 		self::$attachment_ids['tachyon-large'] = $factory->attachment->create_upload_object(
 			realpath( __DIR__ . '/../data/tachyon-large.jpg')
+		);
+
+		self::$attachment_ids['tachyon-1132x687'] = $factory->attachment->create_upload_object(
+			realpath( __DIR__ . '/../data/tachyon-1132x687.jpg')
 		);
 	}
 
@@ -72,6 +80,25 @@ class Tests_Resizing extends WP_UnitTestCase {
 			}
 		} );
 		rmdir( $uploads_dir );
+
+		remove_filter( 'wp_unique_filename', __NAMESPACE__ . '\\Tests_Resizing::unique_filename_override' );
+	}
+
+	/**
+	 * Prevents WP from fixing the file name during upload.
+	 *
+	 * This occurs if the file name contains dimensions as a suffix.
+	 * This is to help test for backwards compat with WP 5.3.0 and earlier.
+	 *
+	 * @param string $filename
+	 * @return string
+	 */
+	public static function unique_filename_override( $filename ) {
+		if ( strpos( $filename, 'tachyon-1132x687' ) === false ) {
+			return $filename;
+		}
+
+		return str_replace( '-1.jpg', '.jpg', $filename );
 	}
 
 	function setUp() {
@@ -411,6 +438,30 @@ class Tests_Resizing extends WP_UnitTestCase {
 				],
 				[ 1000, 1000 ],
 			],
+			[
+				'tachyon-1132x687',
+				'large',
+				[
+					'http://tachy.on/u/tachyon-1132x687.jpg?fit=1024,719',
+					'http://tachy.on/u/tachyon-1132x687.jpg?resize=1024,575',
+					'http://tachy.on/u/tachyon-1132x687.jpg?fit=1024,1024',
+					'http://tachy.on/u/tachyon-1132x687.jpg?w=1024&h=575',
+					'http://tachy.on/u/tachyon-1132x687-1.jpg?fit=1024,719',
+					'http://tachy.on/u/tachyon-1132x687-1.jpg?resize=1024,575',
+					'http://tachy.on/u/tachyon-1132x687-1.jpg?fit=1024,1024',
+					'http://tachy.on/u/tachyon-1132x687-1.jpg?w=1024&h=575',
+				],
+				[ 1024, 575 ],
+			],
+			[
+				'tachyon-1132x687',
+				'full',
+				[
+					'http://tachy.on/u/tachyon-1132x687.jpg',
+					'http://tachy.on/u/tachyon-1132x687-1.jpg',
+				],
+				[ 1280, 719 ],
+			],
 		];
 	}
 
@@ -718,6 +769,28 @@ class Tests_Resizing extends WP_UnitTestCase {
 				'<p><img class="alignnone" src="%%BASE_URL%%/tachyon-150x150.jpg" alt="" width="150" height="150" /></p>',
 				[
 					'http://tachy.on/u/tachyon.jpg?resize=150,150',
+				],
+			],
+			// Unknown attachment ID, unknown size, original file name contains dimensions.
+			[
+				'tachyon-1132x687',
+				'<p><img class="alignnone" src="%%BASE_URL%%/tachyon-1132x687.jpg" alt="" /></p>',
+				[
+					'http://tachy.on/u/tachyon-1132x687.jpg',
+				],
+			],
+			[
+				'tachyon-1132x687',
+				'<p><img class="alignnone" src="%%BASE_URL%%/tachyon-1132x687-150x150.jpg" alt="" width="150" height="150" /></p>',
+				[
+					'http://tachy.on/u/tachyon-1132x687.jpg?resize=150,150',
+				],
+			],
+			[
+				'tachyon-1132x687',
+				'<p><img class="alignnone" src="%%BASE_URL%%/tachyon-1132x687-150x150.jpg" alt="" /></p>',
+				[
+					'http://tachy.on/u/tachyon-1132x687.jpg?resize=150,150',
 				],
 			],
 		];
