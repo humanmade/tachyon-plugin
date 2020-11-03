@@ -956,4 +956,56 @@ class Tachyon {
 	public function _override_image_downsize_in_rest_edit_context() {
 		return true;
 	}
+
+	/**
+	 * Rename an existing attachment file to support Tachyon.
+	 *
+	 * Some legacy uploads may have image dimensions in the file name. Tachyon
+	 * does not support this for performance reasons. This function renames
+	 * attachments
+	 *
+	 * @param integer $attachment_id The attachment post ID.
+	 * @param bool $remove_old_files If true deletes the old files.
+	 * @return true|WP_Error
+	 */
+	public static function _rename_file( int $attachment_id, bool $remove_old_files = true ) {
+
+		$file = get_attached_file( $attachment_id );
+
+		// Trim dimensions from file name and make sure it's actually different.
+		$new_file = preg_replace( '/-\d+x\d+\.(jpe?g|png|gif)$/', '.$1', $file );
+		if ( $file === $new_file ) {
+			return new WP_Error( 'tachyon_rename_file', "{$file} does not need to be renamed" );
+		}
+
+		// Make sure it's unique.
+		$new_file = wp_unique_filename( dirname( $file ), basename( $new_file ) );
+		$new_file = dirname( $file ) . DIRECTORY_SEPARATOR . $new_file;
+
+		// Copy old file to new name.
+		$copied = copy( $file, $new_file );
+		if ( ! $copied ) {
+			return new WP_Error( 'tachyon_rename_file', "{$file} could not be copied to {$new_file}" );
+		}
+
+		// Generate new metadata.
+		$metadata = wp_generate_attachment_metadata( $attachment_id, $new_file );
+		if ( $metadata ) {
+			wp_update_attachment_metadata( $attachment_id, $metadata );
+			update_attached_file( $attachment_id, $new_file );
+
+			// Optionally find and remove the old files.
+			if ( $remove_old_files ) {
+				$pattern = substr( $file, 0, strrpos( $file, '.' ) );
+				$old_files = glob( "$pattern*" );
+				foreach ( $old_files as $old_file ) {
+					unlink( $old_file );
+				}
+			}
+
+			return true;
+		} else {
+			return new WP_Error( 'tachyon_rename_file', "Could not generate new attachment metadata for attachment ID {$attachment_id}" );
+		}
+	}
 }

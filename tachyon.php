@@ -17,6 +17,10 @@ if ( ! defined( 'TACHYON_URL' ) || ! TACHYON_URL ) {
 }
 
 require_once( dirname( __FILE__ ) . '/inc/class-tachyon.php' );
+if ( defined( 'WP_CLI' ) && WP_CLI ) {
+	require_once( dirname( __FILE__ ) . '/inc/class-command.php' );
+	WP_CLI::add_command( 'tachyon', 'Tachyon_Command', );
+}
 
 Tachyon::instance();
 
