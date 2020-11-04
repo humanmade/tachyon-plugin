@@ -3,10 +3,6 @@
  * CLI Commands for Tachyon.
  */
 
-use WP_CLI;
-use WP_CLI_Command;
-use Tachyon;
-
 class Tachyon_Command extends WP_CLI_Command {
 
 	/**
@@ -18,21 +14,22 @@ class Tachyon_Command extends WP_CLI_Command {
 	 * performantly rewriting the post content.
 	 *
 	 * @subcommand migrate-files
-	 * @synopsis [--network] [--remove-old-files]
+	 * @synopsis [--network] [--remove-old-files] [--sites-page=<int>]
 	 */
 	public function migrate_files( $args, $assoc_args ) {
 		global $wpdb;
 
 		$assoc_args = wp_parse_args( $assoc_args, [
 			'network' => false,
-			'remove-old-files' => true,
+			'remove-old-files' => false,
+			'sites-page' => 0
 		] );
 
 		$sites = [ get_current_blog_id() ];
 		if ( $assoc_args['network'] ) {
-			$sites = new WP_Site_Query( [
+			$sites = get_sites( [
 				'fields' => 'ids',
-				'number' => 1000,
+				'offset' => $assoc_args['sites-page'],
 			] );
 		}
 
@@ -43,10 +40,10 @@ class Tachyon_Command extends WP_CLI_Command {
 				WP_CLI::log( "Processing site {$site_id}" );
 			}
 
-			$attachments = $wpdb->get_results( "SELECT post_id
-				FROM {$wpdb->post_meta}
+			$attachments = $wpdb->get_col( "SELECT post_id
+				FROM {$wpdb->postmeta}
 				WHERE meta_key = '_wp_attached_file'
-				AND meta_key REGEXP '^.*-\d+x\d+\.(jpe?g|png|gif)$';" );
+				AND meta_value REGEXP '-[[:digit:]]+x[[:digit:]]+\.(jpe?g|png|gif)$';" );
 
 			WP_CLI::log( sprintf( 'Renaming %d attachments', count( $attachments ) ) );
 

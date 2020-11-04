@@ -969,6 +969,7 @@ class Tachyon {
 	 * @return true|WP_Error
 	 */
 	public static function _rename_file( int $attachment_id, bool $remove_old_files = true ) {
+		global $wpdb;
 
 		$file = get_attached_file( $attachment_id );
 
@@ -993,6 +994,27 @@ class Tachyon {
 		if ( $metadata ) {
 			wp_update_attachment_metadata( $attachment_id, $metadata );
 			update_attached_file( $attachment_id, $new_file );
+			clean_attachment_cache( $attachment_id );
+
+			// Update posts table content.
+			$wpdb->query( 'SET @uids := 0;' );
+			$wpdb->query( $wpdb->prepare(
+				"UPDATE {$wpdb->posts}
+				SET post_content = REPLACE(post_content, %s, %s)
+				WHERE post_content LIKE %s
+					AND ( SELECT @uids := CONCAT_WS(',', ID, @uids) );",
+				_wp_relative_upload_path( $file ),
+				_wp_relative_upload_path( $new_file ),
+				'%' . $wpdb->esc_like( _wp_relative_upload_path( $file ) ) . '%'
+			) );
+			$updated_ids = $wpdb->get_var( 'SELECT @uids;' );
+
+			// Refresh post caches.
+			if ( $updated_ids ) {
+				$updated_ids = array_map( 'absint', explode( ',', $updated_ids ) );
+				$updated_ids = array_filter( $updated_ids );
+				array_map( 'clean_post_cache', $updated_ids );
+			}
 
 			// Optionally find and remove the old files.
 			if ( $remove_old_files ) {
