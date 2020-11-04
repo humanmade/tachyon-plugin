@@ -59,6 +59,8 @@ class Tachyon_Command extends WP_CLI_Command {
 			restore_current_blog();
 		}
 
+		WP_CLI::log( 'Flushing cache...' );
+		wp_cache_flush();
 		WP_CLI::success( 'Done!' );
 	}
 
