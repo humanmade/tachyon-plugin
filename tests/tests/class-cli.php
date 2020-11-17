@@ -92,16 +92,6 @@ class Tests_CLI extends WP_UnitTestCase {
 	public function test_file_renaming() {
 		$attachment_id = self::$attachment_ids['tachyon-1280x719'];
 
-		// Create a post with a reference to the file.
-		$post_id = wp_insert_post( [
-			'post_title' => 'Replace test',
-			'post_content' => sprintf(
-				'<figure><img src="%s" alt="" /></figure>',
-				wp_get_attachment_image_url( $attachment_id, 'full' )
-			),
-			'post_status' => 'publish',
-		] );
-
 		// Get the file path.
 		$file = get_attached_file( $attachment_id );
 		$thumb_file = dirname( $file ) . '/' . basename( $file, '.jpg' ) . '-150x150.jpg';
@@ -115,19 +105,13 @@ class Tests_CLI extends WP_UnitTestCase {
 
 		// Rename the attachment.
 		$result = Tachyon::_rename_file( $attachment_id );
-		$this->assertTrue( $result, 'Attachment renamed successfully' );
+		$this->assertTrue( is_array( $result ), 'Attachment renamed successfully' );
 
 		$new_file = get_attached_file( $attachment_id );
 
 		// Confirm new file name.
 		$this->assertEquals( 'tachyon-1.jpg', basename( $new_file ) );
 		// Confirm old original has been removed.
-		$this->assertFalse( file_exists( $file ), "File $file deleted" );
-		// Confirm old thumbnail has been removed.
-		$this->assertFalse( file_exists( $thumb_file ), "Thumbnail $file deleted" );
-
-		// Confirm post content has been updated.
-		$post = get_post( $post_id );
-		$this->assertContains( 'tachyon-1.jpg', $post->post_content );
+		$this->assertTrue( file_exists( $new_file ), "File $new_file exists" );
 	}
 }

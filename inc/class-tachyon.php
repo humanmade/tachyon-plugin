@@ -962,16 +962,15 @@ class Tachyon {
 	 *
 	 * Some legacy uploads may have image dimensions in the file name. Tachyon
 	 * does not support this for performance reasons. This function renames
-	 * attachments
+	 * attachments and returns an array containing the attachment ID, the old
+	 * metadata and the new metadata.
 	 *
 	 * @param integer $attachment_id The attachment post ID.
-	 * @param bool $remove_old_files If true deletes the old files.
-	 * @return true|WP_Error
+	 * @return array|WP_Error
 	 */
-	public static function _rename_file( int $attachment_id, bool $remove_old_files = true ) {
-		global $wpdb;
-
+	public static function _rename_file( int $attachment_id ) {
 		$file = get_attached_file( $attachment_id );
+		$metadata = wp_get_attachment_metadata( $attachment_id );
 
 		// Trim dimensions from file name and make sure it's actually different.
 		$new_file = preg_replace( '/-\d+x\d+\.(jpe?g|png|gif)$/', '.$1', $file );
@@ -990,45 +989,20 @@ class Tachyon {
 		}
 
 		// Generate new metadata.
-		$metadata = wp_generate_attachment_metadata( $attachment_id, $new_file );
-		if ( empty( $metadata ) || ! is_array( $metadata ) ) {
+		$new_metadata = wp_generate_attachment_metadata( $attachment_id, $new_file );
+		if ( empty( $new_metadata ) || ! is_array( $new_metadata ) ) {
 			return new WP_Error( 'tachyon_rename_file', "Could not generate new attachment metadata for attachment ID {$attachment_id}" );
 		}
 
 		// Update the attachment.
-		wp_update_attachment_metadata( $attachment_id, $metadata );
+		wp_update_attachment_metadata( $attachment_id, $new_metadata );
 		update_attached_file( $attachment_id, $new_file );
 		clean_attachment_cache( $attachment_id );
 
-		// Update posts table content.
-		$wpdb->query( 'SET @uids := 0;' );
-		$wpdb->query( $wpdb->prepare(
-			"UPDATE {$wpdb->posts}
-			SET post_content = REPLACE(post_content, %s, %s)
-			WHERE post_content LIKE %s
-				AND ( SELECT @uids := CONCAT_WS(',', ID, @uids) );",
-			_wp_relative_upload_path( $file ),
-			_wp_relative_upload_path( $new_file ),
-			'%' . $wpdb->esc_like( _wp_relative_upload_path( $file ) ) . '%'
-		) );
-		$updated_ids = $wpdb->get_var( 'SELECT @uids;' );
-
-		// Refresh post caches.
-		if ( $updated_ids ) {
-			$updated_ids = array_map( 'absint', explode( ',', $updated_ids ) );
-			$updated_ids = array_filter( $updated_ids );
-			array_map( 'clean_post_cache', $updated_ids );
-		}
-
-		// Optionally find and remove the old files.
-		if ( $remove_old_files ) {
-			$pattern = substr( $file, 0, strrpos( $file, '.' ) );
-			$old_files = glob( "$pattern*" );
-			foreach ( $old_files as $old_file ) {
-				unlink( $old_file );
-			}
-		}
-
-		return true;
+		return [
+			'ID' => $attachment_id,
+			'old' => $metadata,
+			'new' => $new_metadata,
+		];
 	}
 }
