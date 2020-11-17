@@ -969,6 +969,10 @@ class Tachyon {
 	 * @return array|WP_Error
 	 */
 	public static function _rename_file( int $attachment_id ) {
+		if ( ! wp_attachment_is_image( $attachment_id ) ) {
+			return new WP_Error( 'tachyon_rename_file', sprintf( 'Attachment ID %d is not an image or does not exist', $attachment_id ) );
+		}
+
 		$file = get_attached_file( $attachment_id );
 		$metadata = wp_get_attachment_metadata( $attachment_id );
 
