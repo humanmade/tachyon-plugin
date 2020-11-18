@@ -49,7 +49,7 @@ class Tachyon_Command extends WP_CLI_Command {
 			foreach ( $attachments as $attachment_id ) {
 				$result = Tachyon::_rename_file( $attachment_id );
 				if ( is_wp_error( $result ) ) {
-					WP_CLI::error( $result );
+					WP_CLI::error( $result, false );
 					continue;
 				}
 
@@ -66,7 +66,7 @@ class Tachyon_Command extends WP_CLI_Command {
 				// Run search replace against each image size.
 				foreach ( $result['old']['sizes'] as $size => $size_data ) {
 					if ( ! isset( $result['new']['sizes'][ $size ] ) ) {
-						WP_CLI::error( sprintf( '  - Size "%s" does not exist for updated attachment %d', $size, $attachment_id ) );
+						WP_CLI::error( sprintf( '  - Size "%s" does not exist for updated attachment %d', $size, $attachment_id ), false );
 						continue;
 					}
 
