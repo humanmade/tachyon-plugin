@@ -14,7 +14,7 @@ class Tachyon_Command extends WP_CLI_Command {
 	 * performantly rewriting the post content.
 	 *
 	 * @subcommand migrate-files
-	 * @synopsis [--network] [--sites-page=<int>]
+	 * @synopsis [--network] [--sites-page=<int>] [--include-columns=<columns>]
 	 */
 	public function migrate_files( $args, $assoc_args ) {
 		global $wpdb;
@@ -22,6 +22,7 @@ class Tachyon_Command extends WP_CLI_Command {
 		$assoc_args = wp_parse_args( $assoc_args, [
 			'network' => false,
 			'sites-page' => 0,
+			'include-columns' => 'post_content,post_excerpt,meta_value'
 		] );
 
 		$sites = [ get_current_blog_id() ];
@@ -31,6 +32,10 @@ class Tachyon_Command extends WP_CLI_Command {
 				'offset' => $assoc_args['sites-page'],
 			] );
 		}
+
+		// Get a reference to the search replace command class.
+		// The class uses the `__invoke()` magic method allowing it to be called like a function.
+		$search_replace = new Search_Replace_Command;
 
 		foreach ( $sites as $site_id ) {
 			switch_to_blog( $site_id );
@@ -53,7 +58,7 @@ class Tachyon_Command extends WP_CLI_Command {
 					continue;
 				}
 
-				WP_CLI::log( sprintf( 'Renamed attachment %d successfully, performing search & replace.', $attachment_id ) );
+				WP_CLI::success( sprintf( 'Renamed attachment %d successfully, performing search & replace.', $attachment_id ) );
 
 				// Add the full size to the array.
 				$result['old']['sizes']['full'] = [
@@ -63,29 +68,35 @@ class Tachyon_Command extends WP_CLI_Command {
 					'file' => $result['new']['file'],
 				];
 
+				// Store all update queries into one transaction per image.
+				$wpdb->query( 'START TRANSACTION;' );
+
 				// Run search replace against each image size.
 				foreach ( $result['old']['sizes'] as $size => $size_data ) {
 					if ( ! isset( $result['new']['sizes'][ $size ] ) ) {
-						WP_CLI::error( sprintf( '  - Size "%s" does not exist for updated attachment %d', $size, $attachment_id ), false );
+						WP_CLI::error( sprintf( 'Size "%s" does not exist for updated attachment %d', $size, $attachment_id ), false );
 						continue;
 					}
 
-					$options = [
-						'return' => true, // Don't capture STDOUT.
-						'launch' => false, // Use another process.
-						'exit_error' => true,
-					];
-					$count = WP_CLI::runcommand(
-						sprintf(
-							'search-replace %s %s --format=count --url=%s',
+					WP_CLI::log( sprintf( 'Making replacements for size "%s" %s -> %s', $size, $size_data['file'], $result['new']['sizes'][ $size ]['file'] ) );
+
+					// Run search & replace.
+					$search_replace(
+						[
+							// Old.
 							$size_data['file'],
+							// New.
 							$result['new']['sizes'][ $size ]['file'],
-							home_url()
-						),
-						$options
+						],
+						// Associative array args / command flags.
+						[
+							'include-columns' => $assoc_args['include-columns'],
+							'quiet' => true,
+						]
 					);
-					WP_CLI::log( sprintf( '  - Made %d replacements for size "%s" %s -> %s', $count, $size, $size_data['file'], $result['new']['sizes'][ $size ]['file'] ) );
 				}
+
+				$wpdb->query( 'COMMIT;' );
 			}
 
 			restore_current_blog();
