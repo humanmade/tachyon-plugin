@@ -352,6 +352,9 @@ class Tachyon {
 						}
 
 						// Set the gravity from the registered image size.
+						// Crop weight array values are in x, y order so need to be reversed before combining.
+						// The value `westsouth` will cause Sharp to error and Tachyon to return a 404, 
+						// it needs to `southwest` so we reverse the crop array to y, x.
 						if ( 'resize' === $transform && isset( $size ) && $size !== 'full' && array_key_exists( $size, $image_sizes ) && is_array( $image_sizes[ $size ]['crop'] ) ) {
 							$args['gravity'] = implode( '', array_map( function ( $v ) {
 								$map = [
@@ -362,7 +365,7 @@ class Tachyon {
 									'right' => 'east',
 								];
 								return $map[ $v ];
-							}, $image_sizes[ $size ]['crop'] ) );
+							}, array_reverse( $image_sizes[ $size ]['crop'] ) ) );
 						}
 					} elseif ( false !== $width ) {
 						$args['w'] = $width;
