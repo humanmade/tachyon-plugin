@@ -1,21 +1,41 @@
 <?php
+/**
+ * Tachyon Plugin.
+ *
+ * phpcs:disable HM.Functions.NamespacedFunctions.MissingNamespace
+ * phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
+ */
 
+/**
+ * Plugin singleton class.
+ */
 class Tachyon {
 	/**
-	 * Class variables
+	 * Oh look, a singleton!
+	 *
+	 * @var Tachyon|null
 	 */
-	// Oh look, a singleton
 	private static $__instance = null;
 
-	// Allowed extensions must match https://code.trac.wordpress.org/browser/photon/index.php#L33
-	protected static $extensions = array(
+	/**
+	 * Allowed extensions must match https://code.trac.wordpress.org/browser/photon/index.php#L33
+	 *
+	 * @var array
+	 */
+	protected static $extensions = [
 		'gif',
 		'jpg',
 		'jpeg',
-		'png'
-	);
+		'png',
+	];
 
-	// Don't access this directly. Instead, use self::image_sizes() so it's actually populated with something.
+	/**
+	 * Image sizes.
+	 *
+	 * Don't access this directly. Instead, use self::image_sizes() so it's actually populated with something.
+	 *
+	 * @var array|null
+	 */
 	protected static $image_sizes = null;
 
 	/**
@@ -47,24 +67,25 @@ class Tachyon {
 	 */
 	private function setup() {
 
-		if ( ! function_exists( 'tachyon_url' ) )
+		if ( ! function_exists( 'tachyon_url' ) ) {
 			return;
+		}
 
-		// Images in post content and galleries
-		add_filter( 'the_content', array( __CLASS__, 'filter_the_content' ), 999999 );
-		add_filter( 'get_post_galleries', array( __CLASS__, 'filter_the_galleries' ), 999999 );
+		// Images in post content and galleries.
+		add_filter( 'the_content', [ __CLASS__, 'filter_the_content' ], 999999 );
+		add_filter( 'get_post_galleries', [ __CLASS__, 'filter_the_galleries' ], 999999 );
 
-		// Core image retrieval
-		add_filter( 'image_downsize', array( $this, 'filter_image_downsize' ), 10, 3 );
-		add_filter( 'rest_request_before_callbacks', array( $this, 'should_rest_image_downsize' ), 10, 3 );
-		add_filter( 'rest_request_after_callbacks', array( $this, 'cleanup_rest_image_downsize' ) );
+		// Core image retrieval.
+		add_filter( 'image_downsize', [ $this, 'filter_image_downsize' ], 10, 3 );
+		add_filter( 'rest_request_before_callbacks', [ $this, 'should_rest_image_downsize' ], 10, 3 );
+		add_filter( 'rest_request_after_callbacks', [ $this, 'cleanup_rest_image_downsize' ] );
 
-		// Responsive image srcset substitution
-		add_filter( 'wp_calculate_image_srcset', array( $this, 'filter_srcset_array' ), 10, 5 );
+		// Responsive image srcset substitution.
+		add_filter( 'wp_calculate_image_srcset', [ $this, 'filter_srcset_array' ], 10, 5 );
 	}
 
 	/**
-	 ** IN-CONTENT IMAGE MANIPULATION FUNCTIONS
+	 * * IN-CONTENT IMAGE MANIPULATION FUNCTIONS
 	 **/
 
 	/**
@@ -76,19 +97,20 @@ class Tachyon {
 	 *         and img_url keys are arrays of those matches.
 	 */
 	public static function parse_images_from_html( $content ) {
-		$images = array();
+		$images = [];
 
 		if ( preg_match_all( '#(?:<a[^>]+?href=["|\'](?P<link_url>[^\s]+?)["|\'][^>]*?>\s*)?(?P<img_tag><img[^>]+?src=["|\'](?P<img_url>[^\s]+?)["|\'].*?>){1}(?:\s*</a>)?#is', $content, $images ) ) {
 			foreach ( $images as $key => $unused ) {
 				// Simplify the output as much as possible, mostly for confirming test results.
-				if ( is_numeric( $key ) && $key > 0 )
-					unset( $images[$key] );
+				if ( is_numeric( $key ) && $key > 0 ) {
+					unset( $images[ $key ] );
+				}
 			}
 
 			return $images;
 		}
 
-		return array();
+		return [];
 	}
 
 	/**
@@ -98,23 +120,24 @@ class Tachyon {
 	 * @return array An array consisting of width and height.
 	 */
 	public static function parse_dimensions_from_filename( $src ) {
-		$width_height_string = array();
+		$width_height_string = [];
 
-		if ( preg_match( '#-(\d+)x(\d+)\.(?:' . implode('|', self::$extensions ) . '){1}$#i', $src, $width_height_string ) ) {
+		if ( preg_match( '#-(\d+)x(\d+)\.(?:' . implode( '|', self::$extensions ) . '){1}$#i', $src, $width_height_string ) ) {
 			$width = (int) $width_height_string[1];
 			$height = (int) $width_height_string[2];
 
-			if ( $width && $height )
-				return array( $width, $height );
+			if ( $width && $height ) {
+				return [ $width, $height ];
+			}
 		}
 
-		return array( false, false );
+		return [ false, false ];
 	}
 
 	/**
 	 * Identify images in post content, and if images are local (uploaded to the current site), pass through Tachyon.
 	 *
-	 * @param string $content
+	 * @param string $content Post content.
 	 * @uses self::validate_image_url, apply_filters, tachyon_url, esc_url
 	 * @filter the_content
 	 * @return string
@@ -127,7 +150,7 @@ class Tachyon {
 
 			$image_sizes = self::image_sizes();
 			$upload_dir = wp_upload_dir();
-			$attachment_ids = array();
+			$attachment_ids = [];
 
 			foreach ( $images[0] as $tag ) {
 				if ( preg_match( '/wp-image-([0-9]+)/i', $tag, $class_id ) && absint( $class_id[1] ) ) {
@@ -145,17 +168,17 @@ class Tachyon {
 			}
 
 			foreach ( $images[0] as $index => $tag ) {
-				// Default to resize, though fit may be used in certain cases where a dimension cannot be ascertained
+				// Default to resize, though fit may be used in certain cases where a dimension cannot be ascertained.
 				$transform = 'resize';
 
 				// Start with a clean size and attachment ID each time.
 				$attachment_id = false;
 				unset( $size );
 
-				// Flag if we need to munge a fullsize URL
+				// Flag if we need to munge a fullsize URL.
 				$fullsize_url = false;
 
-				// Identify image source
+				// Identify image source.
 				$src = $src_orig = $images['img_url'][ $index ];
 
 				/**
@@ -167,11 +190,12 @@ class Tachyon {
 				 * @param string $src Image URL.
 				 * @param string $tag Image Tag (Image HTML output).
 				 */
-				if ( apply_filters( 'tachyon_skip_image', false, $src, $tag ) )
+				if ( apply_filters( 'tachyon_skip_image', false, $src, $tag ) ) {
 					continue;
+				}
 
-				// Support Automattic's Lazy Load plugin
-				// Can't modify $tag yet as we need unadulterated version later
+				// Support Automattic's Lazy Load plugin.
+				// Can't modify $tag yet as we need unadulterated version later.
 				if ( preg_match( '#data-lazy-src=["|\'](.+?)["|\']#i', $images['img_tag'][ $index ], $lazy_load_src ) ) {
 					$placeholder_src = $placeholder_src_orig = $src;
 					$src = $src_orig = $lazy_load_src[1];
@@ -180,17 +204,19 @@ class Tachyon {
 					$src = $src_orig = $lazy_load_src[1];
 				}
 
-				// Check if image URL should be used with Tachyon
+				// Check if image URL should be used with Tachyon.
 				if ( self::validate_image_url( $src ) ) {
-					// Find the width and height attributes
+					// Find the width and height attributes.
 					$width = $height = false;
 
-					// First, check the image tag
-					if ( preg_match( '#width=["|\']?([\d%]+)["|\']?#i', $images['img_tag'][ $index ], $width_string ) )
+					// First, check the image tag.
+					if ( preg_match( '#width=["|\']?([\d%]+)["|\']?#i', $images['img_tag'][ $index ], $width_string ) ) {
 						$width = $width_string[1];
+					}
 
-					if ( preg_match( '#height=["|\']?([\d%]+)["|\']?#i', $images['img_tag'][ $index ], $height_string ) )
+					if ( preg_match( '#height=["|\']?([\d%]+)["|\']?#i', $images['img_tag'][ $index ], $height_string ) ) {
 						$height = $height_string[1];
+					}
 
 					// If image tag lacks width or height arguments, try to determine from strings WP appends to resized image filenames.
 					if ( ! $width || ! $height ) {
@@ -200,10 +226,11 @@ class Tachyon {
 					}
 
 					// Can't pass both a relative width and height, so unset the height in favor of not breaking the horizontal layout.
-					if ( false !== strpos( $width, '%' ) && false !== strpos( $height, '%' ) )
+					if ( false !== strpos( $width, '%' ) && false !== strpos( $height, '%' ) ) {
 						$width = $height = false;
+					}
 
-					// Detect WP registered image size from HTML class
+					// Detect WP registered image size from HTML class.
 					if ( preg_match( '#class=["|\']?[^"\']*size-([^"\'\s]+)[^"\']*["|\']?#i', $images['img_tag'][ $index ], $matches ) ) {
 						$size = array_pop( $matches );
 
@@ -215,7 +242,7 @@ class Tachyon {
 						}
 					}
 
-					// WP Attachment ID, if uploaded to this site
+					// WP Attachment ID, if uploaded to this site.
 					if (
 						preg_match( '#class=["|\']?[^"\']*wp-image-([\d]+)[^"\']*["|\']?#i', $images['img_tag'][ $index ], $class_attachment_id ) &&
 						(
@@ -227,12 +254,12 @@ class Tachyon {
 							 *
 							 * @param bool false Was the image uploaded to the local site. Default to false.
 							 * @param array $args {
-							 * 	 Array of image details.
+							 *   Array of image details.
 							 *
-							 * 	 @type $src Image URL.
-							 * 	 @type tag Image tag (Image HTML output).
-							 * 	 @type $images Array of information about the image.
-							 * 	 @type $index Image index.
+							 *   @type $src Image URL.
+							 *   @type tag Image tag (Image HTML output).
+							 *   @type $images Array of information about the image.
+							 *   @type $index Image index.
 							 * }
 							 */
 							apply_filters( 'tachyon_image_is_local', false, compact( 'src', 'tag', 'images', 'index' ) )
@@ -242,8 +269,8 @@ class Tachyon {
 
 						if ( $class_attachment_id ) {
 							$attachment = get_post( $class_attachment_id );
-							// Basic check on returned post object
-							if ( is_object( $attachment ) && ! is_wp_error( $attachment ) && 'attachment' == $attachment->post_type ) {
+							// Basic check on returned post object.
+							if ( is_object( $attachment ) && ! is_wp_error( $attachment ) && 'attachment' === $attachment->post_type ) {
 								$attachment_id = $attachment->ID;
 
 								// If we still don't have a size for the image, use the attachment_id
@@ -266,7 +293,7 @@ class Tachyon {
 									$sizes = array_keys( $image_sizes );
 									foreach ( $sizes as $size ) {
 										$size_per_wp = wp_get_attachment_image_src( $attachment_id, $size );
-										if ( $width == $size_per_wp[1] && $height == $size_per_wp[2] ) {
+										if ( $width === $size_per_wp[1] && $height === $size_per_wp[2] ) {
 											$transform = $image_sizes[ $size ]['crop'] ? 'resize' : 'fit';
 											break;
 										}
@@ -293,15 +320,15 @@ class Tachyon {
 									$src = $src_per_wp[0];
 									$fullsize_url = true;
 
-									// Prevent image distortion if a detected dimension exceeds the image's natural dimensions
+									// Prevent image distortion if a detected dimension exceeds the image's natural dimensions.
 									if ( ( false !== $width && $width > $src_per_wp[1] ) || ( false !== $height && $height > $src_per_wp[2] ) ) {
-										$width = false == $width ? false : min( $width, $src_per_wp[1] );
-										$height = false == $height ? false : min( $height, $src_per_wp[2] );
+										$width = false === $width ? false : min( $width, $src_per_wp[1] );
+										$height = false === $height ? false : min( $height, $src_per_wp[2] );
 									}
 
-									// If no width and height are found, max out at source image's natural dimensions
-									// Otherwise, respect registered image sizes' cropping setting
-									if ( false == $width && false == $height ) {
+									// If no width and height are found, max out at source image's natural dimensions.
+									// Otherwise, respect registered image sizes' cropping setting.
+									if ( false === $width && false === $height ) {
 										$width = $src_per_wp[1];
 										$height = $src_per_wp[2];
 										$transform = 'fit';
@@ -315,7 +342,7 @@ class Tachyon {
 						}
 					}
 
-					// If width is available, constrain to $content_width
+					// If width is available, constrain to $content_width.
 					if ( false !== $width && false === strpos( $width, '%' ) && is_numeric( $content_width ) ) {
 						if ( $width > $content_width && false !== $height && false === strpos( $height, '%' ) ) {
 							$height = round( ( $content_width * $height ) / $width );
@@ -325,26 +352,28 @@ class Tachyon {
 						}
 					}
 
-					// Set a width if none is found and $content_width is available
-					// If width is set in this manner and height is available, use `fit` instead of `resize` to prevent skewing
+					// Set a width if none is found and $content_width is available.
+					// If width is set in this manner and height is available, use `fit` instead of `resize` to prevent skewing.
 					if ( false === $width && is_numeric( $content_width ) ) {
 						$width = (int) $content_width;
 
-						if ( false !== $height )
+						if ( false !== $height ) {
 							$transform = 'fit';
+						}
 					}
 
 					// Detect if image source is for a custom-cropped thumbnail and prevent further URL manipulation.
-					if ( ! $fullsize_url && preg_match_all( '#-e[a-z0-9]+(-\d+x\d+)?\.(' . implode('|', self::$extensions ) . '){1}$#i', basename( $src ), $filename ) )
+					if ( ! $fullsize_url && preg_match_all( '#-e[a-z0-9]+(-\d+x\d+)?\.(' . implode( '|', self::$extensions ) . '){1}$#i', basename( $src ), $filename ) ) {
 						$fullsize_url = true;
+					}
 
-					// Build URL, first maybe removing WP's resized string so we pass the original image to Tachyon
+					// Build URL, first maybe removing WP's resized string so we pass the original image to Tachyon.
 					if ( ! $fullsize_url ) {
 						$src = self::strip_image_dimensions_maybe( $src );
 					}
 
-					// Build array of Tachyon args and expose to filter before passing to Tachyon URL function
-					$args = array();
+					// Build array of Tachyon args and expose to filter before passing to Tachyon URL function.
+					$args = [];
 
 					if ( false !== $width && false !== $height && false === strpos( $width, '%' ) && false === strpos( $height, '%' ) ) {
 						if ( ! isset( $size ) || $size !== 'full' ) {
@@ -352,7 +381,7 @@ class Tachyon {
 						}
 
 						// Set the gravity from the registered image size.
-						// Crop weight array values are in x, y order but the value `westsouth` will 
+						// Crop weight array values are in x, y order but the value `westsouth` will
 						// cause Sharp to error and Tachyon to return a 404, it needs to be `southwest`
 						// so we reverse the crop array to y, x order.
 						if ( 'resize' === $transform && isset( $size ) && $size !== 'full' && array_key_exists( $size, $image_sizes ) && is_array( $image_sizes[ $size ]['crop'] ) ) {
@@ -401,18 +430,19 @@ class Tachyon {
 					/**
 					 * Filter the array of Tachyon arguments added to an image when it goes through Tachyon.
 					 * By default, only includes width and height values.
+					 *
 					 * @see https://developer.wordpress.com/docs/photon/api/
 					 *
 					 * @param array $args Array of Tachyon Arguments.
 					 * @param array $args {
-					 * 	 Array of image details.
+					 *   Array of image details.
 					 *
-					 * 	 @type $tag Image tag (Image HTML output).
-					 * 	 @type $src Image URL.
-					 * 	 @type $src_orig Original Image URL.
-					 * 	 @type $width Image width.
-					 * 	 @type $height Image height.
-					 * 	 @type $attachment_id Attachment ID.
+					 *   @type $tag Image tag (Image HTML output).
+					 *   @type $src Image URL.
+					 *   @type $src_orig Original Image URL.
+					 *   @type $width Image width.
+					 *   @type $height Image height.
+					 *   @type $attachment_id Attachment ID.
 					 * }
 					 */
 					$args = apply_filters( 'tachyon_post_image_args', $args, compact( 'tag', 'src', 'src_orig', 'width', 'height', 'attachment_id', 'size' ) );
@@ -421,36 +451,38 @@ class Tachyon {
 
 					// Modify image tag if Tachyon function provides a URL
 					// Ensure changes are only applied to the current image by copying and modifying the matched tag, then replacing the entire tag with our modified version.
-					if ( $src != $tachyon_url ) {
+					if ( $src !== $tachyon_url ) {
 						$new_tag = $tag;
 
 						// If present, replace the link href with a Tachyoned URL for the full-size image.
-						if ( ! empty( $images['link_url'][ $index ] ) && self::validate_image_url( $images['link_url'][ $index ] ) )
+						if ( ! empty( $images['link_url'][ $index ] ) && self::validate_image_url( $images['link_url'][ $index ] ) ) {
 							$new_tag = preg_replace( '#(href=["|\'])' . $images['link_url'][ $index ] . '(["|\'])#i', '\1' . tachyon_url( $images['link_url'][ $index ] ) . '\2', $new_tag, 1 );
+						}
 
-						// Supplant the original source value with our Tachyon URL
+						// Supplant the original source value with our Tachyon URL.
 						$tachyon_url = esc_url( $tachyon_url );
 						$new_tag = str_replace( $src_orig, $tachyon_url, $new_tag );
 
-						// If Lazy Load is in use, pass placeholder image through Tachyon
+						// If Lazy Load is in use, pass placeholder image through Tachyon.
 						if ( isset( $placeholder_src ) && self::validate_image_url( $placeholder_src ) ) {
 							$placeholder_src = tachyon_url( $placeholder_src );
 
-							if ( $placeholder_src != $placeholder_src_orig )
+							if ( $placeholder_src !== $placeholder_src_orig ) {
 								$new_tag = str_replace( $placeholder_src_orig, esc_url( $placeholder_src ), $new_tag );
+							}
 
 							unset( $placeholder_src );
 						}
 
-						// Remove the width and height arguments from the tag to prevent distortion
+						// Remove the width and height arguments from the tag to prevent distortion.
 						if ( apply_filters( 'tachyon_remove_size_attributes', true ) ) {
 							$new_tag = preg_replace( '#(?<=\s)(width|height)=["|\']?[\d%]+["|\']?\s?#i', '', $new_tag );
 						}
 
-						// Tag an image for dimension checking
+						// Tag an image for dimension checking.
 						$new_tag = preg_replace( '#(\s?/)?>(\s*</a>)?$#i', ' data-recalc-dims="1"\1>\2', $new_tag );
 
-						// Replace original tag with modified version
+						// Replace original tag with modified version.
 						$content = str_replace( $tag, $new_tag, $content );
 					}
 				} elseif ( preg_match( '#^http(s)?://i[\d]{1}.wp.com#', $src ) && ! empty( $images['link_url'][ $index ] ) && self::validate_image_url( $images['link_url'][ $index ] ) ) {
@@ -464,6 +496,12 @@ class Tachyon {
 		return $content;
 	}
 
+	/**
+	 * Ensure galleries use Tachyon.
+	 *
+	 * @param array $galleries The post's galleries.
+	 * @return array
+	 */
 	public static function filter_the_galleries( $galleries ) {
 		if ( empty( $galleries ) || ! is_array( $galleries ) ) {
 			return $galleries;
@@ -481,15 +519,15 @@ class Tachyon {
 	}
 
 	/**
-	 ** CORE IMAGE RETRIEVAL
+	 * * CORE IMAGE RETRIEVAL
 	 **/
 
 	/**
-	 * Filter post thumbnail image retrieval, passing images through Tachyon
+	 * Filter post thumbnail image retrieval, passing images through Tachyon.
 	 *
-	 * @param string|bool $image
-	 * @param int $attachment_id
-	 * @param string|array $size
+	 * @param string|bool $image Image array.
+	 * @param int $attachment_id The attachment ID.
+	 * @param string|array $size The target image size.
 	 * @uses is_admin, apply_filters, wp_get_attachment_url, self::validate_image_url, this::image_sizes, tachyon_url
 	 * @filter image_downsize
 	 * @return string|bool
@@ -502,11 +540,11 @@ class Tachyon {
 		 *
 		 * @param bool true Disable the use of Tachyon in the admin.
 		 * @param array $args {
-		 * 	 Array of image details.
+		 *   Array of image details.
 		 *
-		 * 	 @type $image Image URL.
-		 * 	 @type $attachment_id Attachment ID of the image.
-		 * 	 @type $size Image size. Can be a string (name of the image size, e.g. full), integer or an array e.g. [ width, height ].
+		 *   @type $image Image URL.
+		 *   @type $attachment_id Attachment ID of the image.
+		 *   @type $size Image size. Can be a string (name of the image size, e.g. full), integer or an array e.g. [ width, height ].
 		 * }
 		 */
 		$disable_in_admin = is_admin() && apply_filters( 'tachyon_disable_in_admin', true, compact( 'image', 'attachment_id', 'size' ) );
@@ -518,11 +556,11 @@ class Tachyon {
 		 *
 		 * @param bool false Stop Tachyon from being applied to the image. Default to false.
 		 * @param array $args {
-		 * 	 Array of image details.
+		 *   Array of image details.
 		 *
-		 * 	 @type $image Image URL.
-		 * 	 @type $attachment_id Attachment ID of the image.
-		 * 	 @type $size Image size. Can be a string (name of the image size, e.g. full), integer or an array e.g. [ width, height ].
+		 *   @type $image Image URL.
+		 *   @type $attachment_id Attachment ID of the image.
+		 *   @type $size Image size. Can be a string (name of the image size, e.g. full), integer or an array e.g. [ width, height ].
 		 * }
 		 */
 		$override_image_downsize = apply_filters( 'tachyon_override_image_downsize', false, compact( 'image', 'attachment_id', 'size' ) );
@@ -531,22 +569,23 @@ class Tachyon {
 			return $image;
 		}
 
-		// Get the image URL and proceed with Tachyon-ification if successful
+		// Get the image URL and proceed with Tachyon-ification if successful.
 		$image_url = wp_get_attachment_url( $attachment_id );
 		$full_size_meta = wp_get_attachment_metadata( $attachment_id );
 		$is_intermediate = false;
 
 		if ( $image_url ) {
-			// Check if image URL should be used with Tachyon
-			if ( ! self::validate_image_url( $image_url ) )
+			// Check if image URL should be used with Tachyon.
+			if ( ! self::validate_image_url( $image_url ) ) {
 				return $image;
+			}
 
-			// If an image is requested with a size known to WordPress, use that size's settings with Tachyon
+			// If an image is requested with a size known to WordPress, use that size's settings with Tachyon.
 			if ( ( is_string( $size ) || is_int( $size ) ) && array_key_exists( $size, self::image_sizes() ) ) {
 				$image_args = self::image_sizes();
 				$image_args = $image_args[ $size ];
 
-				$tachyon_args = array();
+				$tachyon_args = [];
 
 				$image_meta = image_get_intermediate_size( $attachment_id, $size );
 
@@ -569,7 +608,7 @@ class Tachyon {
 					$is_intermediate = true;
 				}
 
-				// Expose determined arguments to a filter before passing to Tachyon
+				// Expose determined arguments to a filter before passing to Tachyon.
 				$transform = $image_args['crop'] ? 'resize' : 'fit';
 
 				// If we can't get the width from the image size args, use the width of the
@@ -595,10 +634,10 @@ class Tachyon {
 				list( $width, $height ) = image_constrain_size_for_editor( $image_meta['width'], $image_meta['height'], $size, 'display' );
 
 				// Check specified image dimensions and account for possible zero values; tachyon fails to resize if a dimension is zero.
-				if ( ( 0 == $image_args['width'] || 0 == $image_args['height'] ) && $transform !== 'fit' ) {
-					if ( 0 == $image_args['width'] && 0 < $image_args['height'] ) {
+				if ( ( 0 === $image_args['width'] || 0 === $image_args['height'] ) && $transform !== 'fit' ) {
+					if ( 0 === $image_args['width'] && 0 < $image_args['height'] ) {
 						$tachyon_args['h'] = $image_args['height'];
-					} elseif ( 0 == $image_args['height'] && 0 < $image_args['width'] ) {
+					} elseif ( 0 === $image_args['height'] && 0 < $image_args['width'] ) {
 						$tachyon_args['w'] = $image_args['width'];
 					}
 				} else {
@@ -637,27 +676,27 @@ class Tachyon {
 				 *
 				 * @param array $tachyon_args Array of Tachyon arguments.
 				 * @param array $args {
-				 * 	 Array of image details.
+				 *   Array of image details.
 				 *
-				 * 	 @type $image_args Array of Image arguments (width, height, crop).
-				 * 	 @type $image_url Image URL.
-				 * 	 @type $attachment_id Attachment ID of the image.
-				 * 	 @type $size Image size. Can be a string (name of the image size, e.g. full) or an integer.
-				 * 	 @type $transform Value can be resize or fit.
+				 *   @type $image_args Array of Image arguments (width, height, crop).
+				 *   @type $image_url Image URL.
+				 *   @type $attachment_id Attachment ID of the image.
+				 *   @type $size Image size. Can be a string (name of the image size, e.g. full) or an integer.
+				 *   @type $transform Value can be resize or fit.
 				 *                    @see https://developer.wordpress.com/docs/photon/api
 				 * }
 				 */
 				$tachyon_args = apply_filters( 'tachyon_image_downsize_string', $tachyon_args, compact( 'image_args', 'image_url', 'attachment_id', 'size', 'transform' ) );
 
 				// Generate Tachyon URL.
-				$image = array(
+				$image = [
 					tachyon_url( $image_url, $tachyon_args ),
 					$width,
 					$height,
 					$is_intermediate,
-				);
+				];
 			} elseif ( is_array( $size ) ) {
-				// Pull width and height values from the provided array, if possible
+				// Pull width and height values from the provided array, if possible.
 				$width = isset( $size[0] ) ? (int) $size[0] : false;
 				$height = isset( $size[1] ) ? (int) $size[1] : false;
 
@@ -681,9 +720,9 @@ class Tachyon {
 
 				list( $width, $height ) = image_constrain_size_for_editor( $width, $height, $size );
 
-				$tachyon_args = array();
+				$tachyon_args = [];
 
-				// Expose arguments to a filter before passing to Tachyon
+				// Expose arguments to a filter before passing to Tachyon.
 				if ( $is_intermediate ) {
 					$tachyon_args['fit'] = $width . ',' . $height;
 				}
@@ -694,23 +733,23 @@ class Tachyon {
 				 *
 				 * @param array $tachyon_args Array of Tachyon arguments.
 				 * @param array $args {
-				 * 	 Array of image details.
+				 *   Array of image details.
 				 *
-				 * 	 @type $width Image width.
-				 * 	 @type height Image height.
-				 * 	 @type $image_url Image URL.
-				 * 	 @type $attachment_id Attachment ID of the image.
+				 *   @type $width Image width.
+				 *   @type height Image height.
+				 *   @type $image_url Image URL.
+				 *   @type $attachment_id Attachment ID of the image.
 				 * }
 				 */
 				$tachyon_args = apply_filters( 'tachyon_image_downsize_array', $tachyon_args, compact( 'width', 'height', 'image_url', 'attachment_id' ) );
 
-				// Generate Tachyon URL
-				$image = array(
+				// Generate Tachyon URL.
+				$image = [
 					tachyon_url( $image_url, $tachyon_args ),
 					$width,
 					$height,
 					$is_intermediate,
-				);
+				];
 			}
 		}
 
@@ -722,6 +761,10 @@ class Tachyon {
 	 *
 	 * @since 3.8.0
 	 * @param array $sources An array of image urls and widths.
+	 * @param array $size_array List of sizes for the srcset.
+	 * @param string $image_src Current image URL.
+	 * @param array $image_meta Image meta data.
+	 * @param int $attachment_id The attachment ID.
 	 * @uses self::validate_image_url, tachyon_url
 	 * @return array An array of Tachyon image urls and widths.
 	 */
@@ -736,21 +779,20 @@ class Tachyon {
 			$url = $source['url'];
 			list( $width, $height ) = static::parse_dimensions_from_filename( $url );
 
-			// It's quicker to get the full size with the data we have already, if available
+			// It's quicker to get the full size with the data we have already, if available.
 			if ( isset( $image_meta['file'] ) ) {
 				$url = trailingslashit( $upload_dir['baseurl'] ) . $image_meta['file'];
 			} else {
 				$url = static::strip_image_dimensions_maybe( $url );
 			}
 
-			$args = array();
+			$args = [];
 			if ( 'w' === $source['descriptor'] ) {
-				if ( $height && ( $source['value'] == $width ) ) {
+				if ( $height && ( intval( $source['value'] ) === intval( $width ) ) ) {
 					$args['resize'] = $width . ',' . $height;
 				} else {
 					$args['w'] = $source['value'];
 				}
-
 			}
 
 			// If the image_src is a tahcyon url, add it's params
@@ -766,13 +808,13 @@ class Tachyon {
 			 *
 			 * @param array $args Array of Tachyon Arguments.
 			 * @param array $args {
-			 * 	 Array of image details.
+			 *   Array of image details.
 			 *
-			 * 	 @type $source Array containing URL and target dimensions.
-			 * 	 @type $image_meta Array containing attachment metadata.
-			 * 	 @type $width Image width.
-			 * 	 @type $height Image height.
-			 * 	 @type $attachment_id Image ID.
+			 *   @type $source Array containing URL and target dimensions.
+			 *   @type $image_meta Array containing attachment metadata.
+			 *   @type $width Image width.
+			 *   @type $height Image height.
+			 *   @type $attachment_id Image ID.
 			 * }
 			 */
 			$args = apply_filters( 'tachyon_srcset_image_args', $args, compact( 'source', 'image_meta', 'width', 'height', 'attachment_id' ) );
@@ -784,7 +826,7 @@ class Tachyon {
 	}
 
 	/**
-	 ** GENERAL FUNCTIONS
+	 * * GENERAL FUNCTIONS
 	 **/
 
 	/**
@@ -792,7 +834,7 @@ class Tachyon {
 	 *
 	 * Though Tachyon functions address some of the URL issues, we should avoid unnecessary processing if we know early on that the image isn't supported.
 	 *
-	 * @param string $url
+	 * @param string $url An image URL.
 	 * @uses wp_parse_args
 	 * @return bool
 	 */
@@ -803,8 +845,8 @@ class Tachyon {
 			return false;
 		}
 
-		// only replace urls with supported file extensions
-		if ( ! in_array( strtolower( pathinfo( $parsed_url['path'], PATHINFO_EXTENSION ) ), static::$extensions ) ) {
+		// only replace urls with supported file extensions.
+		if ( ! in_array( strtolower( pathinfo( $parsed_url['path'], PATHINFO_EXTENSION ) ), static::$extensions, true ) ) {
 			return false;
 		}
 
@@ -825,11 +867,11 @@ class Tachyon {
 	/**
 	 * Checks if the file exists before it passes the file to tachyon
 	 *
-	 * @param string $src The image URL
+	 * @param string $src The image URL.
 	 * @return string
 	 **/
 	protected static function strip_image_dimensions_maybe( $src ) {
-		// Build URL, first removing WP's resized string so we pass the original image to Tachyon
+		// Build URL, first removing WP's resized string so we pass the original image to Tachyon.
 		if ( preg_match( '#(-\d+x\d+)\.(' . implode( '|', self::$extensions ) . '){1}$#i', $src, $src_parts ) ) {
 			$src = str_replace( $src_parts[1], '', $src );
 		}
@@ -846,51 +888,51 @@ class Tachyon {
 	 * @return array
 	 */
 	protected static function image_sizes() {
-		if ( null == self::$image_sizes ) {
+		if ( null === self::$image_sizes ) {
 			global $_wp_additional_image_sizes;
 
-			// Populate an array matching the data structure of $_wp_additional_image_sizes so we have a consistent structure for image sizes
-			$images = array(
-				'thumb'  => array(
+			// Populate an array matching the data structure of $_wp_additional_image_sizes so we have a consistent structure for image sizes.
+			$images = [
+				'thumb'  => [
 					'width'  => intval( get_option( 'thumbnail_size_w' ) ),
 					'height' => intval( get_option( 'thumbnail_size_h' ) ),
-					'crop'   => (bool) get_option( 'thumbnail_crop' )
-				),
-				'medium' => array(
+					'crop'   => (bool) get_option( 'thumbnail_crop' ),
+				],
+				'medium' => [
 					'width'  => intval( get_option( 'medium_size_w' ) ),
 					'height' => intval( get_option( 'medium_size_h' ) ),
-					'crop'   => false
-				),
-				'medium_large' => array(
+					'crop'   => false,
+				],
+				'medium_large' => [
 					'width'  => intval( get_option( 'medium_large_size_w' ) ),
 					'height' => intval( get_option( 'medium_large_size_h' ) ),
-					'crop'   => false
-				),
-				'large'  => array(
+					'crop'   => false,
+				],
+				'large'  => [
 					'width'  => intval( get_option( 'large_size_w' ) ),
 					'height' => intval( get_option( 'large_size_h' ) ),
-					'crop'   => false
-				),
-				'full'   => array(
+					'crop'   => false,
+				],
+				'full'   => [
 					'width'  => null,
 					'height' => null,
-					'crop'   => false
-				)
-			);
+					'crop'   => false,
+				],
+			];
 
-			// Compatibility mapping as found in wp-includes/media.php
+			// Compatibility mapping as found in wp-includes/media.php.
 			$images['thumbnail'] = $images['thumb'];
 
-			// Update class variable, merging in $_wp_additional_image_sizes if any are set
-			if ( is_array( $_wp_additional_image_sizes ) && ! empty( $_wp_additional_image_sizes ) )
+			// Update class variable, merging in $_wp_additional_image_sizes if any are set.
+			if ( is_array( $_wp_additional_image_sizes ) && ! empty( $_wp_additional_image_sizes ) ) {
 				self::$image_sizes = array_merge( $images, $_wp_additional_image_sizes );
-			else
+			} else {
 				self::$image_sizes = $images;
+			}
 		}
 
-		return is_array( self::$image_sizes ) ? self::$image_sizes : array();
+		return is_array( self::$image_sizes ) ? self::$image_sizes : [];
 	}
-
 
 	/**
 	 * Determine if image_downsize should utilize Tachyon via REST API.
@@ -911,7 +953,7 @@ class Tachyon {
 	 * @return null|WP_Error The original response object without modification.
 	 */
 	public function should_rest_image_downsize( $response, $endpoint_data, $request ) {
-		if ( ! is_a( $request , 'WP_REST_Request' ) ) {
+		if ( ! is_a( $request, 'WP_REST_Request' ) ) {
 			return $response; // Something odd is happening. Do nothing and return the response.
 		}
 
@@ -925,12 +967,11 @@ class Tachyon {
 		if ( false !== strpos( $route, 'wp/v2/media' ) && 'edit' === $request['context'] ) {
 			// Don't use `__return_true()`: Use something unique. See ::_override_image_downsize_in_rest_edit_context()
 			// Late execution to avoid conflict with other plugins as we really don't want to run in this situation.
-			add_filter( 'tachyon_override_image_downsize', array( $this, '_override_image_downsize_in_rest_edit_context' ), 999999 );
+			add_filter( 'tachyon_override_image_downsize', [ $this, '_override_image_downsize_in_rest_edit_context' ], 999999 );
 		}
 
 		return $response;
 	}
-
 
 	/**
 	 * Remove the override we may have added in ::should_rest_image_downsize()
@@ -942,7 +983,7 @@ class Tachyon {
 	 * @return mixed Unchanged $response
 	 */
 	public function cleanup_rest_image_downsize( $response ) {
-		remove_filter( 'tachyon_override_image_downsize', array( $this, '_override_image_downsize_in_rest_edit_context' ), 999999 );
+		remove_filter( 'tachyon_override_image_downsize', [ $this, '_override_image_downsize_in_rest_edit_context' ], 999999 );
 		return $response;
 	}
 

@@ -1,4 +1,8 @@
 <?php
+/**
+ * Resizing tests.
+ */
+
 namespace HM\Tachyon\Tests;
 
 use ReflectionClass;
@@ -13,22 +17,30 @@ use WP_UnitTestCase;
 class Tests_Resizing extends WP_UnitTestCase {
 
 	/**
-	 * @var int[] Attachment IDs
+	 * Attachment IDs
+	 *
+	 * @var int[]
 	 */
 	static $attachment_ids;
 
 	/**
-	 * @var array[] Original array of image sizes.
+	 * Original array of image sizes.
+	 *
+	 * @var array[]
 	 */
 	static $wp_additional_image_sizes;
 
 	/**
 	 * Set up attachments and posts require for testing.
 	 *
+	 * Image files:
 	 * tachyon.jpg: 1280x719
 	 * tachyon-large.jpg: 5312x2988
 	 * Photo by Digital Buggu from Pexels
+	 *
 	 * @link https://www.pexels.com/photo/0-7-rpm-171195/
+	 *
+	 * @param WP_UnitTest_Factory $factory WP test factory object.
 	 */
 	static public function wpSetUpBeforeClass( $factory ) {
 		global $_wp_additional_image_sizes;
@@ -37,11 +49,11 @@ class Tests_Resizing extends WP_UnitTestCase {
 		self::setup_custom_sizes();
 
 		self::$attachment_ids['tachyon'] = $factory->attachment->create_upload_object(
-			realpath( __DIR__ . '/../data/tachyon.jpg')
+			realpath( __DIR__ . '/../data/tachyon.jpg' )
 		);
 
 		self::$attachment_ids['tachyon-large'] = $factory->attachment->create_upload_object(
-			realpath( __DIR__ . '/../data/tachyon-large.jpg')
+			realpath( __DIR__ . '/../data/tachyon-large.jpg' )
 		);
 	}
 
@@ -68,12 +80,17 @@ class Tests_Resizing extends WP_UnitTestCase {
 		$files = glob( $uploads_dir . '/*' );
 		array_walk( $files, function ( $file ) {
 			if ( is_file( $file ) ) {
-				unlink($file);
+				unlink( $file );
 			}
 		} );
 		rmdir( $uploads_dir );
 	}
 
+	/**
+	 * Set up tests.
+	 *
+	 * @return void
+	 */
 	function setUp() {
 		parent::setUp();
 		self::setup_custom_sizes();
@@ -124,6 +141,11 @@ class Tests_Resizing extends WP_UnitTestCase {
 	 * Test URLs are parsed correctly.
 	 *
 	 * @dataProvider data_filtered_url
+	 *
+	 * @param string $file The image file path.
+	 * @param string|array $size Size name or array.
+	 * @param array $valid_urls Valid outputs.
+	 * @param array $expected_size Expected width and height.
 	 */
 	function test_filtered_url( $file, $size, $valid_urls, $expected_size ) {
 		$valid_urls = (array) $valid_urls;
@@ -420,11 +442,11 @@ class Tests_Resizing extends WP_UnitTestCase {
 	 * There should only ever be one image in the content so the regex
 	 * can be simplified to search for the source attribute only.
 	 *
-	 * @param $html string HTML containing an image tag.
+	 * @param string $html HTML containing an image tag.
 	 * @return string The first `src` attribute within the first image tag.
 	 */
 	function get_src_from_html( $html ) {
-		preg_match_all( '/src\s*=\s*[\'"]([^\'"]+)[\'"]/i' , $html, $matches, PREG_SET_ORDER );
+		preg_match_all( '/src\s*=\s*[\'"]([^\'"]+)[\'"]/i', $html, $matches, PREG_SET_ORDER );
 		if ( empty( $matches[0][1] ) ) {
 			return false;
 		}
@@ -436,6 +458,11 @@ class Tests_Resizing extends WP_UnitTestCase {
 	 * Test image tags passed as part of the content.
 	 *
 	 * @dataProvider data_content_filtering
+	 *
+	 * @param string $file Image file path.
+	 * @param string $content Post content.
+	 * @param array $valid_urls Valid outputs.
+	 * @return void
 	 */
 	function test_content_filtering( $file, $content, $valid_urls ) {
 		$valid_urls = (array) $valid_urls;
@@ -452,6 +479,7 @@ class Tests_Resizing extends WP_UnitTestCase {
 	/**
 	 * Data provider for test_content_filtering.
 	 *
+	 * Output:
 	 * return array[] {
 	 *     $file         string The basename of the uploaded file to tests against.
 	 *     $content      string The content being filtered.
