@@ -4,10 +4,15 @@
  *
  * @package WordPress
  * @subpackage JSON API
-*/
+ *
+ * phpcs:disable PSR1.Files.SideEffects
+ */
 
 require '/wp-phpunit/includes/functions.php';
 
+/**
+ * Load Tachyon.
+ */
 function _manually_load_plugin() {
 	require dirname( __FILE__ ) . '/../tachyon.php';
 }
@@ -33,6 +38,5 @@ tests_add_filter( 'upload_dir', function( $upload_dir ) {
 // Always run Tachyon filters.
 tests_add_filter( 'tachyon_disable_in_admin', '__return_false' );
 tests_add_filter( 'tachyon_override_image_downsize', '__return_false', 999999 + 1 );
-
 
 require '/wp-phpunit/includes/bootstrap.php';
