@@ -143,10 +143,10 @@ class Tests_Linking extends WP_UnitTestCase {
 				'<p><a href="%%BASE_URL%%/tachyon.jpg"><img class="alignnone size-thumbnail wp-image-%%ID%%" src="%%BASE_URL%%/tachyon-150x150.jpg" alt="" width="150" height="150" /></a></p>',
 				[
 					'http://tachy.on/u/tachyon.jpg',
-					'http://tachy.on/u/tachyon.jpg?resize=1280,719',
+					'http://tachy.on/u/tachyon.jpg?resize=1280%2C719',
 				],
 				[
-					'http://tachy.on/u/tachyon.jpg?resize=150,150',
+					'http://tachy.on/u/tachyon.jpg?resize=150%2C150',
 				],
 			],
 			// Block editor linked thumbnail.
@@ -155,10 +155,10 @@ class Tests_Linking extends WP_UnitTestCase {
 				'<figure class="wp-block-image size-medium"><a href="%%BASE_URL%%/tachyon.jpg"><img src="%%BASE_URL%%/tachyon-150x150.jpg" alt="" class="wp-image-%%ID%%"/></a></figure>',
 				[
 					'http://tachy.on/u/tachyon.jpg',
-					'http://tachy.on/u/tachyon.jpg?resize=1280,719',
+					'http://tachy.on/u/tachyon.jpg?resize=1280%2C719',
 				],
 				[
-					'http://tachy.on/u/tachyon.jpg?resize=150,150',
+					'http://tachy.on/u/tachyon.jpg?resize=150%2C150',
 				],
 			],
 			// Block editor gallery.
@@ -167,10 +167,10 @@ class Tests_Linking extends WP_UnitTestCase {
 				'<figure class="wp-block-gallery columns-1 is-cropped"><ul class="blocks-gallery-grid"><li class="blocks-gallery-item"><figure><a href="%%BASE_URL%%/tachyon.jpg"><img src="%%BASE_URL%%/tachyon-1024x575.jpg" alt="" data-id="%%ID%%" data-full-url="%%BASE_URL%%/tachyon.jpg" data-link="http://milstead.local/2019/12/26/classic-test/tachyon/" class="wp-image-%%ID%%"/></a></figure></li></ul></figure>',
 				[
 					'http://tachy.on/u/tachyon.jpg',
-					'http://tachy.on/u/tachyon.jpg?resize=1280,719',
+					'http://tachy.on/u/tachyon.jpg?resize=1280%2C719',
 				],
 				[
-					'http://tachy.on/u/tachyon.jpg?resize=1024,575',
+					'http://tachy.on/u/tachyon.jpg?resize=1024%2C575',
 				],
 			],
 		];

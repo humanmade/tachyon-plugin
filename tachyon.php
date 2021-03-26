@@ -55,10 +55,10 @@ function tachyon_url( $image_url, $args = array(), $scheme = null ) {
 	$args      = apply_filters( 'tachyon_pre_args',      $args,      $image_url, $scheme );
 
 	$tachyon_url = str_replace( $upload_baseurl, TACHYON_URL, $image_url );
-
 	if ( $args ) {
 		if ( is_array( $args ) ) {
-			$tachyon_url = add_query_arg( $args, $tachyon_url );
+			// URL encode all param values, as this is not handled by add_query_arg.
+			$tachyon_url = add_query_arg( array_map( 'rawurlencode', $args ), $tachyon_url );
 		} else {
 			// You can pass a query string for complicated requests but where you still want CDN subdomain help, etc.
 			$tachyon_url .= '?' . $args;
