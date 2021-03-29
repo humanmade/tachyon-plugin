@@ -4,9 +4,10 @@
  *
  * @package WordPress
  * @subpackage JSON API
- *
- * phpcs:disable PSR1.Files.SideEffects
  */
+
+// phpcs:disable PSR1.Files.SideEffects
+// phpcs:disable HM.Functions.NamespacedFunctions.MissingNamespace
 
 require '/wp-phpunit/includes/functions.php';
 
