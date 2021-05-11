@@ -706,16 +706,18 @@ class Tachyon {
 				}
 
 				$image_meta = wp_get_attachment_metadata( $attachment_id );
-				$image_resized = image_resize_dimensions( $image_meta['width'], $image_meta['height'], $width, $height );
-				if ( $image_resized ) {
-					// Use the resized image dimensions.
-					$width = $image_resized[6];
-					$height = $image_resized[7];
-					$is_intermediate = true;
-				} else {
-					// Resized image would be larger than original.
-					$width = $image_meta['width'];
-					$height = $image_meta['height'];
+				if ( isset( $image_meta['width'] ) && isset( $image_meta['height'] ) ) {
+					$image_resized = image_resize_dimensions( $image_meta['width'], $image_meta['height'], $width, $height );
+					if ( $image_resized ) {
+						// Use the resized image dimensions.
+						$width = $image_resized[6];
+						$height = $image_resized[7];
+						$is_intermediate = true;
+					} else {
+						// Resized image would be larger than original.
+						$width = $image_meta['width'];
+						$height = $image_meta['height'];
+					}
 				}
 
 				list( $width, $height ) = image_constrain_size_for_editor( $width, $height, $size );
