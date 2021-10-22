@@ -27,6 +27,7 @@ class Tachyon {
 		'jpg',
 		'jpeg',
 		'png',
+		'webp',
 	];
 
 	/**
