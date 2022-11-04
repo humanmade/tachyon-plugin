@@ -582,7 +582,7 @@ class Tachyon {
 			}
 
 			// If an image is requested with a size known to WordPress, use that size's settings with Tachyon.
-			if ( ( is_string( $size ) || is_int( $size ) ) && array_key_exists( $size, self::image_sizes() ) ) {
+			if ( ! empty( $full_size_meta ) && ( is_string( $size ) || is_int( $size ) ) && array_key_exists( $size, self::image_sizes() ) ) {
 				$image_args = self::image_sizes();
 				$image_args = $image_args[ $size ];
 
