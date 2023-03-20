@@ -801,7 +801,7 @@ class Tachyon {
 			// If the image_src is a tahcyon url, add it's params
 			// to the srcset images too.
 			if ( strpos( $image_src, TACHYON_URL ) === 0 ) {
-				parse_str( parse_url( $image_src, PHP_URL_QUERY ), $image_src_args );
+				parse_str( parse_url( $image_src, PHP_URL_QUERY ) ?? '', $image_src_args );
 				$args = array_merge( $args, array_intersect_key( $image_src_args, [ 'gravity' => true ] ) );
 			}
 
