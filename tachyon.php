@@ -72,7 +72,7 @@ function tachyon_url( $image_url, $args = [], $scheme = null ) {
 		$image_url = add_query_arg( 'presign', urlencode( http_build_query( $presign ) ), $image_url );
 	}
 
-	$args      = apply_filters( 'tachyon_pre_args', $args, $image_url, $scheme );
+	$args = apply_filters( 'tachyon_pre_args', $args, $image_url, $scheme );
 
 	$tachyon_url = str_replace( $upload_baseurl, TACHYON_URL, $image_url );
 	if ( $args ) {
