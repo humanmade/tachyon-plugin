@@ -55,6 +55,23 @@ function tachyon_url( $image_url, $args = [], $scheme = null ) {
 	}
 
 	$image_url = apply_filters( 'tachyon_pre_image_url', $image_url, $args, $scheme );
+
+	// If the image URL has X-Amz params for signed requests, we need to add them to the Tachyon URL
+	// under a `presign` param. However, only do this if we're on a version of TFA that supports it.
+	if ( getenv( 'TFA_VERSION' ) && version_compare( getenv( 'TFA_VERSION' ), '4.6.0', '>=') && stripos( $image_url, 'X-Amz-' ) !== false ) {
+		$params = [];
+		$presign = [];
+		$query = parse_url( $image_url, PHP_URL_QUERY );
+		parse_str( $query, $params );
+		foreach ( $params as $key => $value ) {
+			if ( stripos( $key, 'X-Amz-' ) === 0 ) {
+				$presign[ $key ] = $value;
+				$image_url = remove_query_arg( $key, $image_url );
+			}
+		}
+		$image_url = add_query_arg( 'presign', urlencode( http_build_query( $presign ) ), $image_url );
+	}
+
 	$args      = apply_filters( 'tachyon_pre_args', $args, $image_url, $scheme );
 
 	$tachyon_url = str_replace( $upload_baseurl, TACHYON_URL, $image_url );
