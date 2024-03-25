@@ -58,7 +58,7 @@ function tachyon_url( $image_url, $args = [], $scheme = null ) {
 
 	// If the image URL has X-Amz params for signed requests, we need to add them to the Tachyon URL
 	// under a `presign` param. However, only do this if we're on a version of TFA that supports it.
-	if ( getenv( 'TFA_VERSION' ) && version_compare( getenv( 'TFA_VERSION' ), '4.6.0', '>=' ) && stripos( $image_url, 'X-Amz-' ) !== false ) {
+	if ( tachyon_server_version() && version_compare( tachyon_server_version(), '3.0.0', '>=' ) && stripos( $image_url, 'X-Amz-' ) !== false ) {
 		$params = [];
 		$presign = [];
 		$query = parse_url( $image_url, PHP_URL_QUERY );
@@ -93,4 +93,20 @@ function tachyon_url( $image_url, $args = [], $scheme = null ) {
 	 * @param array  $args        A key value array of the query args appended to $image_url.
 	 */
 	return apply_filters( 'tachyon_url', $tachyon_url, $image_url, $args );
+}
+
+/**
+ * Get the version of the Tachyon Server
+ *
+ * This is not always known, so it may return null.
+ *
+ * @return string|null
+ */
+function tachyon_server_version() {
+	$version = null;
+	if ( defined( 'TACHYON_SERVER_VERSION' ) ) {
+		$version = TACHYON_SERVER_VERSION;
+	}
+
+	return apply_filters( 'tachyon_server_version', $version );
 }
