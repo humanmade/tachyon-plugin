@@ -279,7 +279,7 @@ class Tachyon {
 								// to lookup the size for the image in the URL.
 								if ( ! isset( $size ) ) {
 									$meta = wp_get_attachment_metadata( $attachment_id );
-									if ( $meta['sizes'] ) {
+									if ( $meta && $meta['sizes'] ) {
 										$sizes = wp_list_filter( $meta['sizes'], [ 'file' => basename( $src ) ] );
 										if ( $sizes ) {
 											$size_names = array_keys( $sizes );
