@@ -786,6 +786,19 @@ class Tachyon {
 			// It's quicker to get the full size with the data we have already, if available.
 			if ( isset( $image_meta['file'] ) ) {
 				$url = trailingslashit( $upload_dir['baseurl'] ) . $image_meta['file'];
+
+				// Retain AWS X-Amz signed requests params so they're passed through to Tachyon.
+				if ( str_contains( $source['url'], 'X-Amz-' ) ) {
+					$params = [];
+					$query = parse_url( $source['url'], PHP_URL_QUERY );
+					parse_str( $query, $params );
+
+					foreach ( $params as $key => $value ) {
+						if ( str_contains( $key, 'X-Amz-' ) ) {
+							$url = add_query_arg( $key, $value, $url );
+						}
+					}
+				}
 			} else {
 				$url = static::strip_image_dimensions_maybe( $url );
 			}
