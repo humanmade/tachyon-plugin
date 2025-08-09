@@ -206,6 +206,9 @@ class Tachyon {
 					$src = $src_orig = $lazy_load_src[1];
 				}
 
+				// Image src coming from HTML is expected to be htmlentityencoded.
+				$src = html_entity_decode( $src );
+
 				// Check if image URL should be used with Tachyon.
 				if ( self::validate_image_url( $src ) ) {
 					// Find the width and height attributes.
