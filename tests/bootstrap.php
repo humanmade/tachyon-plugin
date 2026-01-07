@@ -19,7 +19,7 @@ function _manually_load_plugin() {
 }
 tests_add_filter( 'muplugins_loaded', '_manually_load_plugin' );
 
-// Define a UR for Tachyon to use.
+// Define a URL for Tachyon to use.
 define( 'TACHYON_URL', 'http://tachy.on/u' );
 
 // Prevent upload URLs being affected by the date on which tests run.
