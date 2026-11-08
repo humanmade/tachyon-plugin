@@ -143,6 +143,41 @@ class Tests_Linking extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Ensure link URLs containing regular-expression delimiters are matched literally.
+	 *
+	 * @dataProvider data_special_character_link_sources
+	 *
+	 * @param string $source Image source URL.
+	 * @return void
+	 */
+	function test_content_filtering_escapes_special_characters_in_link_url( $source ) {
+		$base_url = wp_upload_dir()['baseurl'];
+		$link_url = $base_url . '/tachyon.jpg?variant=1#section-$1';
+		$source = str_replace( '%%BASE_URL%%', $base_url, $source );
+		$content = sprintf(
+			'<a href="%1$s"><img src="%2$s" /></a>',
+			$link_url,
+			$source
+		);
+
+		$filtered_content = Tachyon::filter_the_content( $content );
+
+		$this->assertSame( tachyon_url( $link_url ), $this->get_href_from_html( $filtered_content ) );
+	}
+
+	/**
+	 * Provide local and Photon image sources for link rewriting.
+	 *
+	 * @return array
+	 */
+	function data_special_character_link_sources() {
+		return [
+			[ '%%BASE_URL%%/tachyon.jpg' ],
+			[ 'https://i0.wp.com/example.com/tachyon.jpg' ],
+		];
+	}
+
+	/**
 	 * Data provider for test_content_filtering.
 	 *
 	 * Output:
