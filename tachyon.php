@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Tachyon
- * Version: 0.11.1
+ * Version: 0.11.2
  * Description: A standalone tachyon proof of concept
  * Author: Joe Hoyle | Human Made | Automattic Inc
  *
