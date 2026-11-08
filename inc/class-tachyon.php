@@ -170,6 +170,8 @@ class Tachyon {
 			}
 
 			foreach ( $images[0] as $index => $tag ) {
+				$filter = [];
+
 				// Default to resize, though fit may be used in certain cases where a dimension cannot be ascertained.
 				$transform = 'resize';
 
@@ -422,7 +424,8 @@ class Tachyon {
 								$sizes = wp_list_filter( $image_sizes, $filter, 'OR' );
 							}
 							if ( ! empty( $sizes ) ) {
-								$size = reset( $sizes );
+								reset( $sizes );
+								$size = key( $sizes );
 							}
 						}
 					}
@@ -461,7 +464,7 @@ class Tachyon {
 
 						// If present, replace the link href with a Tachyoned URL for the full-size image.
 						if ( ! empty( $images['link_url'][ $index ] ) && self::validate_image_url( $images['link_url'][ $index ] ) ) {
-							$new_tag = preg_replace( '#(href=["|\'])' . $images['link_url'][ $index ] . '(["|\'])#i', '\1' . tachyon_url( $images['link_url'][ $index ] ) . '\2', $new_tag, 1 );
+							$new_tag = self::replace_link_url( $new_tag, $images['link_url'][ $index ] );
 						}
 
 						// Supplant the original source value with our Tachyon URL.
@@ -491,7 +494,7 @@ class Tachyon {
 						$content = str_replace( $tag, $new_tag, $content );
 					}
 				} elseif ( preg_match( '#^http(s)?://i[\d]{1}.wp.com#', $src ) && ! empty( $images['link_url'][ $index ] ) && self::validate_image_url( $images['link_url'][ $index ] ) ) {
-					$new_tag = preg_replace( '#(href=["|\'])' . $images['link_url'][ $index ] . '(["|\'])#i', '\1' . tachyon_url( $images['link_url'][ $index ] ) . '\2', $tag, 1 );
+					$new_tag = self::replace_link_url( $tag, $images['link_url'][ $index ] );
 
 					$content = str_replace( $tag, $new_tag, $content );
 				}
@@ -499,6 +502,21 @@ class Tachyon {
 		}
 
 		return $content;
+	}
+
+	/**
+	 * Replace an image link URL with its Tachyon equivalent.
+	 *
+	 * @param string $tag Image tag or linked image markup.
+	 * @param string $link_url Original link URL.
+	 * @return string
+	 */
+	private static function replace_link_url( $tag, $link_url ) {
+		$pattern = '#(href=["|\'])' . preg_quote( $link_url, '#' ) . '(["|\'])#i';
+
+		return preg_replace_callback( $pattern, function ( $matches ) use ( $link_url ) {
+			return $matches[1] . tachyon_url( $link_url ) . $matches[2];
+		}, $tag, 1 );
 	}
 
 	/**

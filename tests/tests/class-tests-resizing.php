@@ -477,6 +477,33 @@ class Tests_Resizing extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Ensure size matching state does not carry over to the next image.
+	 *
+	 * @return void
+	 */
+	function test_image_size_resolution_does_not_leak_between_images() {
+		$base_url = wp_upload_dir()['baseurl'];
+		$sizes = [];
+		$size_filter = function ( $args, $image ) use ( &$sizes ) {
+			$sizes[] = $image['size'];
+			return $args;
+		};
+
+		add_filter( 'tachyon_post_image_args', $size_filter, 10, 2 );
+
+		Tachyon::filter_the_content(
+			'<img src="' . $base_url . '/tachyon.jpg" width="150" height="150" />' .
+			'<img src="' . $base_url . '/tachyon-large.jpg" />'
+		);
+
+		remove_filter( 'tachyon_post_image_args', $size_filter, 10 );
+
+		$this->assertCount( 2, $sizes );
+		$this->assertSame( 'thumb', $sizes[0] );
+		$this->assertSame( [ false, false ], $sizes[1] );
+	}
+
+	/**
 	 * Data provider for test_content_filtering.
 	 *
 	 * Output:
